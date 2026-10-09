@@ -1,0 +1,40 @@
+name: Pages
+
+# Builds the WebAssembly solver and publishes web/ at https://meros.github.io/hugi/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: web/build.sh
+      - run: mkdir site && cp web/index.html web/app.js web/hugi.js web/worker.js web/hugi_web.wasm site/
+      # Pages lets browsers keep files for ten minutes. A version in every URL means a new
+      # page never meets an old script or an old solver.
+      - run: sed -i "s/v=dev/v=${GITHUB_SHA::10}/g" site/index.html site/app.js site/worker.js
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
