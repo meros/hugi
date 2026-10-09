@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hugi</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg: #f6f5f1; --fg: #1d1d1b; --muted: #6b6a66; --line: #c9c7c0; --cell: #1d1d1b;
+          --accent: #c8553d; --panel: #ffffff; --chip: #ecebe6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --fg: #ecebe6; --muted: #9a9993; --line: #3b3a37; --cell: #ecebe6;
+            --accent: #e07a5f; --panel: #1f1f1d; --chip: #2a2a27; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; padding: .8rem 1rem; }
+  header h1 { font-size: 1.15rem; margin: 0 .6rem 0 0; letter-spacing: .02em; }
+  header h1 small { color: var(--muted); font-weight: 400; margin-left: .4rem; }
+  input, select, button { font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+                          border-radius: 6px; padding: .3rem .55rem; }
+  input { width: 7.5rem; }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--fg); }
+  .links { display: flex; flex-wrap: wrap; gap: .35rem; padding: 0 1rem .6rem; }
+  .links button { background: var(--chip); border-color: transparent; font-size: .85rem; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1rem; padding: 0 1rem 1rem; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .board { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .8rem;
+           overflow: auto; min-height: 60vh; display: flex; align-items: flex-start; justify-content: center; }
+  aside { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; }
+  aside h2 { font-size: 1.05rem; margin: 0 0 .1rem; }
+  aside .by { color: var(--muted); margin-bottom: .8rem; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: .25rem .8rem; margin: 0 0 .8rem; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .verdict { font-weight: 600; }
+  .note { color: var(--muted); font-size: .88rem; }
+  .sols { display: flex; gap: .4rem; margin: .4rem 0 .8rem; }
+  .sols button.on { border-color: var(--accent); color: var(--accent); }
+  .err { color: var(--accent); }
+  kbd { background: var(--chip); border-radius: 4px; padding: 0 .3rem; font-size: .85em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hugi<small>thought, always faster than action</small></h1>
+  <button id="prev" title="previous puzzle (←)">←</button>
+  <input id="pid" placeholder="webpbn no." autocomplete="off">
+  <button id="next" title="next puzzle (→)">→</button>
+  <button id="go">Solve</button>
+  <label class="note">threads
+    <select id="threads"><option value="0">all</option><option>1</option><option>2</option><option>4</option></select>
+  </label>
+  <span class="note"><kbd>←</kbd> <kbd>→</kbd> step through puzzles, <kbd>Enter</kbd> solves</span>
+</header>
+<div class="links" id="links"></div>
+<main>
+  <div class="board"><canvas id="cv"></canvas></div>
+  <aside id="info"><span class="note">Pick a puzzle, or type a webpbn number.</span></aside>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let current = null, result = null, shown = 0, busy = 0;
+
+const ENGINE_TEXT = {
+  "line logic": "Line logic alone: every row and column solved exactly until nothing more followed. No search.",
+  "probing search": "The probing search won: before each branch it tries both values of every open cell, keeps what is forced, and branches on the cell that settles the most.",
+  "learning solver": "The learning solver won: line logic inside a SAT-style search that turns every contradiction into a learned rule, so a dead end is never entered twice.",
+};
+const engineText = e => ENGINE_TEXT[e] || (e.startsWith("learning solver") ? ENGINE_TEXT["learning solver"] +
+  ({ "1": " This strategy also learns about block positions.", "2": " This strategy also probes at level 0." }[e.slice(-1)] || "") : "");
+
+async function load(pid) {
+  pid = String(pid).trim().toLowerCase();
+  if (!pid) return;
+  const ticket = ++busy;
+  $("pid").value = pid; history.replaceState(null, "", "#" + pid);
+  current = null; result = null; shown = 0;
+  $("info").innerHTML = `<span class="note">Fetching puzzle ${pid}…</span>`;
+  draw();
+  const r = await fetch(`/api/puzzle?id=${encodeURIComponent(pid)}`).then(r => r.json());
+  if (ticket !== busy) return;
+  if (r.error) { $("info").innerHTML = `<span class="err">${r.error}</span>`; return; }
+  current = r; draw(); info("Solving…");
+  const s = await fetch(`/api/solve?id=${encodeURIComponent(pid)}&threads=${$("threads").value}`).then(r => r.json());
+  if (ticket !== busy) return;
+  result = s; draw(); info();
+}
+
+function info(status) {
+  const p = current, s = result;
+  let h = `<h2>${p.title || p.id}</h2><div class="by">${p.author || "?"}${p.year ? ", " + p.year : ""} · ${/^\d+$/.test(p.id) ? "webpbn " + p.id : p.id} · ${p.cols.length}×${p.rows.length}</div>`;
+  if (status) h += `<span class="note">${status}</span>`;
+  if (s && s.error) h += `<span class="err">${s.error}</span>`;
+  if (s && !s.error) {
+    const verdict = s.timed_out ? "no answer in time" : s.solutions.length === 0 ? "no solution" : s.unique ? "unique solution" : "at least two solutions";
+    if (s.solutions.length > 1) h += `<div class="sols">` + s.solutions.map((_, i) =>
+      `<button class="${i === shown ? "on" : ""}" onclick="shown=${i};draw();info()">solution ${i + 1}</button>`).join("") +
+      `</div><span class="note">Cells that differ are marked.</span>`;
+    const pct = (100 * s.root_known / s.cells).toFixed(1);
+    h += `<dl>
+      <dt>verdict</dt><dd class="verdict">${verdict}</dd>
+      <dt>time</dt><dd>${fmt(s.seconds)}</dd>
+      <dt>won by</dt><dd>${s.engine}</dd>
+      <dt>threads</dt><dd>${s.threads}</dd>
+      <dt>line logic</dt><dd>${pct} % of cells before any search</dd>
+      <dt>search nodes</dt><dd>${s.nodes.toLocaleString()}</dd>
+      ${s.conflicts ? `<dt>conflicts</dt><dd>${s.conflicts.toLocaleString()} learned rules</dd><dt>restarts</dt><dd>${s.restarts.toLocaleString()}</dd>` : ""}
+    </dl><div class="note">${engineText(s.engine)}</div>`;
+  }
+  $("info").innerHTML = h;
+}
+
+const fmt = t => t < 1e-3 ? (t * 1e6).toFixed(0) + " µs" : t < 1 ? (t * 1e3).toFixed(1) + " ms" : t.toFixed(2) + " s";
+
+function draw() {
+  const cv = $("cv"), ctx = cv.getContext("2d");
+  if (!current) { cv.width = cv.height = 0; return; }
+  const { rows, cols } = current, h = rows.length, w = cols.length;
+  const rmax = Math.max(1, ...rows.map(r => r.length)), cmax = Math.max(1, ...cols.map(c => c.length));
+  const avail = Math.min(cv.parentElement.clientWidth - 30, 1400);
+  const cell = Math.max(5, Math.min(22, Math.floor(avail / (w + rmax * 0.9))));
+  const left = Math.ceil(rmax * cell * 0.9) + 4, top = Math.ceil(cmax * cell * 0.9) + 4;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = (left + w * cell + 2) * dpr; cv.height = (top + h * cell + 2) * dpr;
+  cv.style.width = (left + w * cell + 2) + "px"; cv.style.height = (top + h * cell + 2) + "px";
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = css("--panel"); ctx.fillRect(0, 0, cv.width, cv.height);
+  const sol = result && result.solutions && result.solutions[shown];
+  const other = result && result.solutions && result.solutions.length > 1 ? result.solutions[1 - shown] : null;
+  if (sol) for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+    const on = sol[r][c] === "#", diff = other && other[r][c] !== sol[r][c];
+    if (on) { ctx.fillStyle = diff ? css("--accent") : css("--cell"); ctx.fillRect(left + c * cell, top + r * cell, cell, cell); }
+    else if (diff) { ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1.5; ctx.strokeRect(left + c * cell + 2, top + r * cell + 2, cell - 4, cell - 4); }
+  }
+  for (let i = 0; i <= w; i++) line(ctx, left + i * cell, top, left + i * cell, top + h * cell, i % 5 === 0);
+  for (let i = 0; i <= h; i++) line(ctx, left, top + i * cell, left + w * cell, top + i * cell, i % 5 === 0);
+  if (cell >= 9) {
+    ctx.fillStyle = css("--fg"); ctx.font = `${Math.floor(cell * 0.62)}px system-ui`; ctx.textBaseline = "middle";
+    ctx.textAlign = "right";
+    rows.forEach((r, i) => r.slice().reverse().forEach((v, k) => ctx.fillText(v, left - 4 - k * cell * 0.9, top + (i + .5) * cell)));
+    ctx.textAlign = "center";
+    cols.forEach((c, i) => c.slice().reverse().forEach((v, k) => ctx.fillText(v, left + (i + .5) * cell, top - cell * .5 - k * cell * 0.9)));
+  }
+}
+function line(ctx, x1, y1, x2, y2, bold) {
+  ctx.strokeStyle = bold ? css("--fg") : css("--line"); ctx.lineWidth = bold ? 1.2 : 0.6;
+  ctx.beginPath(); ctx.moveTo(x1 + .5, y1 + .5); ctx.lineTo(x2 + .5, y2 + .5); ctx.stroke();
+}
+
+function step(d) {
+  const v = $("pid").value.trim();
+  if (/^\d+$/.test(v)) load(Math.max(1, parseInt(v) + d));
+}
+$("prev").onclick = () => step(-1); $("next").onclick = () => step(1);
+$("go").onclick = () => load($("pid").value);
+$("pid").addEventListener("keydown", e => { if (e.key === "Enter") load($("pid").value); });
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "ArrowLeft") step(-1);
+  if (e.key === "ArrowRight") step(1);
+});
+window.addEventListener("resize", draw);
+fetch("/api/hard").then(r => r.json()).then(list => {
+  $("links").innerHTML = list.map(p => `<button data-id="${p.id}">${p.name}</button>`).join("");
+  $("links").querySelectorAll("button").forEach(b => b.onclick = () => load(b.dataset.id));
+});
+if (location.hash.length > 1) load(location.hash.slice(1));
+</script>
+</body>
+</html>
