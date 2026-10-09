@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hugi nonogram maker</title>
+<meta name="description" content="Draw a nonogram and the clues appear. The solver, Hugi, compiled to WebAssembly, tells you at once whether the puzzle has exactly one solution.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23efe3c8'/%3E%3Cpath d='M3 3l10 10M13 3L3 13' stroke='%232e4a73' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  /* Day: parchment, linen and natural dyes (woad, madder, weld, moss). Night: the hall after dark. */
+  :root {
+    --bg: #e6dabd; --panel: #f6efdc; --ink: #2a2118; --muted: #6e604c;
+    --line: #d2c5a4; --heavy: #7a6848; --glow: rgba(255, 255, 255, .28); --stitch: #2e4a73; --madder: #a63d2a;
+    --madder-fill: rgba(166, 61, 42, .22);
+    --good: #3f6b3a; --warn: #a96a10; --bad: #9c2b23; --shadow: rgba(60, 40, 10, .18);
+    --t1: #2e4a73; --t2: #a63d2a; --t3: #c48a12; --t4: #4f6b34; --t5: #2a2118;
+    --serif: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", P052, Georgia, serif;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141b; --panel: #19202a; --ink: #ece3cf; --muted: #98a0a8;
+    --line: #2a3441; --heavy: #6d7b8c; --stitch: #7aa2e0; --madder: #e0765f; --glow: rgba(110, 130, 165, .12);
+    --madder-fill: rgba(224, 118, 95, .28);
+    --good: #8cc07a; --warn: #e6b04a; --bad: #f2877f; --shadow: rgba(0, 0, 0, .5);
+    --t1: #7aa2e0; --t2: #e0765f; --t3: #e8b94a; --t4: #8cb36a; --t5: #e9dfc8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141b; --panel: #19202a; --ink: #ece3cf; --muted: #98a0a8;
+      --line: #2a3441; --heavy: #6d7b8c; --stitch: #7aa2e0; --madder: #e0765f; --glow: rgba(110, 130, 165, .12);
+      --madder-fill: rgba(224, 118, 95, .28);
+      --good: #8cc07a; --warn: #e6b04a; --bad: #f2877f; --shadow: rgba(0, 0, 0, .5);
+      --t1: #7aa2e0; --t2: #e0765f; --t3: #e8b94a; --t4: #8cb36a; --t5: #e9dfc8;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; min-height: 100vh; color: var(--ink); font: 15px/1.5 var(--serif);
+         background-image: radial-gradient(ellipse at 20% 0%, var(--glow), transparent 60%); }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; padding: 1rem 1.2rem .5rem; }
+  header h1 { font-size: 1.6rem; margin: 0; font-weight: 700; letter-spacing: .01em; }
+  header .links { margin-left: auto; font-size: .9rem; display: flex; gap: .9rem; align-items: center; }
+  a { color: var(--madder); }
+  input, select, button { font: inherit; font-size: .92rem; color: var(--ink); background: var(--panel);
+                          border: 2px dashed var(--heavy); border-radius: 8px; padding: .22rem .6rem; }
+  input[type=number] { width: 4.2rem; }
+  button { cursor: pointer; }
+  button:hover, select:hover { border-style: solid; background: var(--line); }
+  button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-visible { outline: 3px solid var(--stitch); outline-offset: 2px; }
+  .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .3rem 1.2rem .9rem; }
+  .bar label { color: var(--muted); }
+  .threads { display: inline-flex; gap: .3rem; align-items: center; margin-left: .4rem; color: var(--muted); }
+  .threads button { width: 1.5rem; height: 1.5rem; border-radius: 50%; padding: 0; border: 2px solid var(--panel); box-shadow: 0 0 0 2px var(--heavy); }
+  .threads button[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 21.5rem; gap: 1.2rem; padding: 0 1.2rem 1.5rem; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  #board-wrap { border: 3px double var(--heavy); border-radius: 10px; padding: .9rem; overflow: auto;
+                display: flex; justify-content: center; align-items: flex-start; background-color: var(--panel);
+                box-shadow: 0 6px 18px var(--shadow);
+                background-image: repeating-linear-gradient(0deg, rgba(120, 100, 60, .07) 0 1px, transparent 1px 3px),
+                                  repeating-linear-gradient(90deg, rgba(120, 100, 60, .07) 0 1px, transparent 1px 3px); }
+  #board { touch-action: none; cursor: crosshair; }
+  aside { border: 2px dashed var(--heavy); border-radius: 10px; padding: 1rem 1.1rem; align-self: start;
+          background-color: var(--panel); box-shadow: 0 6px 18px var(--shadow); }
+  .verdict { font-size: 1.3rem; font-weight: 700; line-height: 1.25; margin-bottom: .2rem; }
+  .verdict.good { color: var(--good); } .verdict.warn { color: var(--warn); }
+  .verdict.bad { color: var(--bad); } .verdict.busy, .verdict.idle { color: var(--muted); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: .2rem .9rem; margin: 0 0 .8rem; padding-top: .6rem; border-top: 1px dashed var(--line); }
+  dt { color: var(--muted); } dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .note { color: var(--muted); font-size: .9rem; margin: .4rem 0; }
+  .help { color: var(--muted); font-size: .88rem; margin-top: 1rem; border-top: 1px dashed var(--line); padding-top: .7rem; }
+  dialog { background: var(--panel); color: var(--ink); border: 3px double var(--heavy); border-radius: 10px; width: min(34rem, 92vw); font-family: var(--serif); }
+  dialog::backdrop { background: rgba(10, 8, 4, .55); }
+  textarea { width: 100%; height: 12rem; font: 13px/1.4 ui-monospace, monospace; background: var(--bg); color: var(--ink);
+             border: 2px dashed var(--heavy); border-radius: 8px; padding: .5rem; }
+  #import-error { color: var(--bad); min-height: 1.4em; }
+  .formats { margin: .3rem 0 .6rem; padding-left: 1.1rem; color: var(--muted); font-size: .9rem; }
+  #image-opts { margin-top: .6rem; }
+  .img-row { display: flex; flex-wrap: wrap; gap: .4rem .9rem; color: var(--muted); margin-bottom: .5rem; }
+  .img-row input[type=range] { width: 8rem; vertical-align: middle; }
+  #img-preview { border: 1px solid var(--line); background: #fff; max-width: 100%; image-rendering: pixelated; }
+  dialog textarea { height: 7rem; }
+  body.dragging::after { content: "Drop the file to import it"; position: fixed; inset: 0; display: grid; place-items: center;
+    font-size: 1.6rem; background: rgba(20, 15, 5, .55); color: #fff; pointer-events: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hugi</h1>
+  <span class="links">
+    <button id="theme" aria-label="Switch between day and night">Night</button>
+    <a href="https://github.com/meros/hugi">the solver, on GitHub</a>
+  </span>
+</header>
+<div class="bar">
+  <label>width <input id="w" type="number" min="1" max="100" value="15"></label>
+  <label>height <input id="h" type="number" min="1" max="100" value="15"></label>
+  <select id="examples" aria-label="Examples">
+    <option value="">Examples…</option>
+    <option value="heart">Heart</option><option value="smiley">Smiley</option><option value="house">House</option>
+    <option value="hugi">The name</option><option value="sierpinski">Sierpinski</option><option value="rings">Rings (several solutions)</option>
+  </select>
+  <button id="random">Random</button>
+  <button id="clear">Clear</button>
+  <button id="import">Import…</button>
+  <button id="share">Copy link</button>
+  <button id="copy-clues">Copy clues</button>
+  <button id="download">Download .txt</button>
+  <button id="png">Save PNG</button>
+  <span class="threads" role="group" aria-label="Colour">colour
+    <button data-thread="1" aria-label="woad blue" style="background:var(--t1)"></button>
+    <button data-thread="2" aria-label="madder red" style="background:var(--t2)"></button>
+    <button data-thread="3" aria-label="weld yellow" style="background:var(--t3)"></button>
+    <button data-thread="4" aria-label="moss green" style="background:var(--t4)"></button>
+    <button data-thread="5" aria-label="ink" style="background:var(--t5)"></button>
+  </span>
+</div>
+<main>
+  <div id="board-wrap"><canvas id="board" tabindex="0" aria-label="The puzzle: click and drag to draw"></canvas></div>
+  <aside aria-live="polite">
+    <div id="verdict" class="verdict idle">Loading the solver…</div>
+    <div id="detail"></div>
+    <p class="help">Click and drag to draw; right-click or shift-drag to erase. The clues follow your picture, and
+      the solver checks it after every change, in your browser. A good puzzle has exactly one solution.
+      "No guessing needed" means row and column logic alone solves it.</p>
+  </aside>
+</main>
+<dialog id="import-dialog">
+  <form method="dialog" onsubmit="return false">
+    <p><strong>Import a puzzle.</strong> Drop a file anywhere on the page, choose one, or paste text.</p>
+    <ul class="formats">
+      <li><b>Clues</b>: Hugi's format (<code>rows</code>, one clue per row, <code>cols</code>, one per column), a webpbn
+        <code>.nin</code> export, or a <code>.non</code> file. The solver finds the picture.</li>
+      <li><b>A picture drawn in text</b>: <code>#</code> for filled, <code>.</code> for empty.</li>
+      <li><b>An image</b> (PNG, JPEG, GIF, WebP): it is shrunk to a grid you can adjust below.</li>
+    </ul>
+    <p><input id="import-file" type="file" accept=".txt,.non,.nin,.g,.png,.jpg,.jpeg,.gif,.webp,.bmp,image/*,text/*"></p>
+    <textarea id="import-text" spellcheck="false" placeholder="rows&#10;2&#10;1 1&#10;cols&#10;1 1&#10;2"></textarea>
+    <div id="image-opts" hidden>
+      <div class="img-row">
+        <label>width <input id="img-w" type="range" min="5" max="100" value="30"> <output id="img-w-out">30</output></label>
+        <label>threshold <input id="img-t" type="range" min="1" max="254" value="128"> <output id="img-t-out">128</output></label>
+        <label><input id="img-auto" type="checkbox" checked> auto</label>
+        <label><input id="img-dither" type="checkbox"> dither</label>
+        <label><input id="img-invert" type="checkbox"> invert</label>
+      </div>
+      <canvas id="img-preview" aria-label="Preview of the picture"></canvas>
+      <div id="img-size" class="note"></div>
+    </div>
+    <div id="import-error"></div>
+    <p><button id="import-go">Import</button> <button id="import-cancel">Cancel</button></p>
+  </form>
+</dialog>
+<script type="module" src="app.js?v=dev"></script>
+</body>
+</html>
