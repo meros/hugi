@@ -1,7 +1,7 @@
 //! Hugi: a fast nonogram solver. Hugi ("thought") is the runner in the
 //! Prose Edda whom no one could outrun.
 //!
-//!     hugi <puzzle.txt> [--threads N] [--bench RUNS]
+//!     hugi <puzzle.txt> [--threads N] [--bench RUNS] [--ascii]
 //!     hugi gen <width> <height> <density%> <seed>
 //!     hugi bench <width> <height> <density%> <count> <seed> [--threads N]
 //!     hugi batch <list-of-files> [--limit-ms N] [--threads N]
@@ -14,12 +14,15 @@ use hugi::format::*;
 use hugi::solver::{self, Outcome, Puzzle};
 use std::time::Instant;
 
+/// The solution as text: two characters per cell, blocks and dots, or `##` and `..` with --ascii
+/// (for logs, chat and pages whose font is not monospace for the block characters).
 fn render(p: &Puzzle, o: &Outcome) -> String {
     let Some(g) = o.solutions.first() else { return "no solution\n".into() };
+    let (on, off) = if std::env::args().any(|a| a == "--ascii") { ("##", "..") } else { ("██", "··") };
     let mut s = String::new();
     for r in 0..p.h {
         for c in 0..p.w {
-            s += if g.filled(r, c) { "██" } else { "··" };
+            s += if g.filled(r, c) { on } else { off };
         }
         s += "\n";
     }

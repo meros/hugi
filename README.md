@@ -32,9 +32,9 @@ four places, and four cells are filled in every one of them, so those can be fil
 
 ```
 clue 7 in 10 cells    ??????????
-leftmost placement    ■■■■■■■···
-rightmost placement   ···■■■■■■■
-filled in both        ···■■■■···
+leftmost placement    #######...
+rightmost placement   ...#######
+filled in both        ...####...
 ```
 
 Hugi's line solver does this exactly, for every row and column, over and over, and not only for
@@ -43,7 +43,7 @@ middle, the usual overlap rule finds nothing, but the exact solver sees that the
 be the known cell and one more, and settles the whole row:
 
 ```
-clue 1 1, one cell known    ??#?#??    becomes    ··#·#··
+clue 1 1, one cell known    ??#?#??    becomes    ..#.#..
 ```
 
 Easy puzzles, such as the smiley and the heart below, fall to this alone. Harder ones leave cells
@@ -85,26 +85,26 @@ the 70×70 and 99×99 random tier it solves 4 of 12 within 60 s where Hugi solve
 ## Try it
 
     cargo build --release
-    ./target/release/hugi puzzles/heart.txt
+    ./target/release/hugi puzzles/heart.txt --ascii
 
 ```
-······························
-····██████··········██████····
-··██████████······██████████··
-██████████████··██████████████
-██████████████████████████████
-██████████████████████████████
-██████████████████████████████
-··██████████████████████████··
-····██████████████████████····
-······██████████████████······
-········██████████████········
-··········██████████··········
-············██████············
-··············██··············
-······························
+..............................
+....######..........######....
+..##########......##########..
+##############..##############
+##############################
+##############################
+##############################
+..##########################..
+....######################....
+......##################......
+........##############........
+..........##########..........
+............######............
+..............##..............
+..............................
 unique solution
-15×15, 0 search nodes, 882.3 µs
+15×15, 0 search nodes, 506.8 µs
 ```
 
 The build uses `-C target-cpu=native` (`.cargo/config.toml`), so the binary runs only on CPUs
@@ -136,6 +136,7 @@ one clue per row, a `cols` line, one clue per column. Lines are up to 127 cells,
 | `hugi <puzzle>` | solve with all cores, report one solution or at least two |
 | `hugi <puzzle> --threads 1` | one thread (the probing search) |
 | `hugi <puzzle> --cdcl` | the learning solver alone, with statistics |
+| `hugi <puzzle> --ascii` | draw the solution with `##` and `..` instead of block characters |
 | `hugi <puzzle> --json` | the result as JSON, for tools |
 | `hugi cnf <puzzle>` | the puzzle as CNF, for any SAT solver |
 | `hugi gen W H DENSITY SEED` | a random puzzle |
