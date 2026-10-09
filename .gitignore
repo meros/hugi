@@ -1,0 +1,11 @@
+/target
+/target-pgo
+/target-pgo-gen
+/result
+# Puzzles are copyright their designers: fetch them, do not commit them.
+/puzzles/webpbn/
+/puzzles/unsolved/
+__pycache__/
+*.profraw
+.playwright-mcp/
+web/hugi_web.wasm

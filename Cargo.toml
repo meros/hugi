@@ -1,0 +1,20 @@
+[package]
+name = "hugi"
+version = "0.1.0"
+edition = "2021"
+description = "A fast nonogram solver: exact line logic, probing and clause learning, racing on every core"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/meros/hugi"
+readme = "README.md"
+keywords = ["nonogram", "picross", "puzzle", "solver", "sat"]
+categories = ["algorithms", "command-line-utilities"]
+publish = false
+
+[workspace]
+members = ["web"]
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"

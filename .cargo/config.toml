@@ -1,0 +1,3 @@
+# The binary is tuned for the CPU that builds it (not for WebAssembly, which has no such flag).
+[target.'cfg(not(target_arch = "wasm32"))']
+rustflags = ["-C", "target-cpu=native"]
