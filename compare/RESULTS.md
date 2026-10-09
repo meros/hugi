@@ -101,3 +101,56 @@ independent script) and kissat reports two solutions as well.
 - With all its inprocessing switched off, kissat still solves the hardest of the 50×50 and 60×60
   puzzles in 8-10 s, and plain MiniSat does not (r50x50-6004 over 60 s, r60x60-7002 54 s): its
   strength on random puzzles is the modern search core as a whole, not one technique.
+
+## More solvers, 2026-10-10
+
+Constraint-programming and answer-set solvers, and the nearest open-source nonogram tool, on the
+same machine, one run each, 60 s limit (300 s for Knotty and Faase). The scripts are
+`compare/cp.py` and the notes below; raw data in `data/cp-rivals-2026-10-09.tsv` and
+`data/number-loom-2026-10-09.tsv`.
+
+- **CP-SAT** (OR-tools 9.15) with one automaton constraint per line, on one core (`cpsat1`) and
+  with 8 workers (`cpsat`). The 8-worker runs went on while other jobs kept the load average at
+  5-8, so they are no better than the one-worker runs.
+- **Chuffed 0.14** (lazy clause generation, the same family as Hugi's learning solver) through
+  MiniZinc 2.10, free search. Two models: one `regular` constraint per line, and block start
+  positions as integer variables, "chuffed-pos", which is far better and used below.
+  **Gecode 6.4** with the `regular` model solves only Forever, 9-Dom and Center within 60 s.
+- **clingo 5.8** (answer-set programming), one thread, a block-start encoding, two models asked
+  for (a second model means several solutions).
+- **Number Loom** (paulstansifer/number-loom, commit 47d7cb5, 0.6.0, MIT): `number-loom puzzle.g
+  --backtrack`, whole-process time on one core. Its backtracking solver learns which combinations
+  are impossible. "Solved" means a unique solution; "unable to solve, N cells left" means
+  several, and it only stops after finding which cells differ in all of them, which is more
+  work than Hugi's "at least two". It is built for editing (colours, trianograms, triddlers), not
+  for speed.
+- The solver-only times of the first four leave out model building, flattening, grounding and
+  start-up, as for kissat above; Number Loom's and Hugi's are whole-process times.
+
+| puzzle | Hugi | kissat | CP-SAT, 1 core | CP-SAT, 8 workers | Chuffed | clingo | Number Loom |
+|---|---|---|---|---|---|---|---|
+| Lion | **49 ms** | 359 ms | 2.02 s | 2.27 s | 4.65 s | 1.60 s | > 60 s |
+| Forever | 12 ms | 43 ms | 70 ms | 80 ms | 8 ms | 10 ms | 170 ms |
+| 9-Dom | 55 ms | 40 ms | 340 ms | 220 ms | 100 ms | 90 ms | 1.36 s |
+| Nature | **167 ms** | 694 ms | 3.69 s | 3.92 s | > 60 s | 51.4 s | 49.1 s |
+| Marley | **37 ms** | 344 ms | 8.48 s | 10.25 s | 40.9 s | 20.2 s | 34.2 s |
+| Center | **9 ms** | 55 ms | 410 ms | 740 ms | 30 ms | 2.20 s | 90 ms |
+| Sierp | **180 ms** | 1.41 s | 4.41 s | 7.39 s | > 60 s | > 60 s | > 60 s |
+| Thing | **729 ms** | 1.23 s | 8.11 s | 10.26 s | > 60 s | 46.4 s | > 60 s |
+| Gettys | **1.98 s** | 4.27 s | 20.5 s | 33.8 s | > 60 s | > 60 s | > 60 s |
+
+On the tiny puzzles the solver-only times of Chuffed and clingo (8-10 ms on Forever) match
+CaDiCaL's 9 ms; their whole-process times are 450 ms and 26 ms, against Hugi's 12 ms.
+
+| set, 60 s per puzzle | solved |
+|---|---|
+| 20 random 50×50 and 60×60 | Hugi 20, kissat 20, CP-SAT (1 core) 18, CP-SAT (8 workers) 17, clingo 12, Chuffed 10, Number Loom 3 |
+| 12 random 70×70 and 99×99 | kissat 4, Hugi 2, CP-SAT with 8 workers 1 (24 s), clingo 0 |
+| Knotty and Faase, 300 s | Hugi 2, kissat 2 (166 s and 114 s), CP-SAT 0, clingo 0, Number Loom 0 |
+
+CP-SAT is the strongest of these: 3 to 25 times slower than kissat and 10 to 230 times slower than
+Hugi on the survey puzzles it solves. Chuffed uses the same technique as Hugi's learning solver
+(lazy clause generation), but through the generic start-position model it solves 5 of the 9 survey
+puzzles (none of Nature, Sierp, Thing and Gettys) and 10 of the 20 random ones. The difference is
+probably the exact line solver as the propagator, with explanations built on demand; that is a
+guess, not a measurement.

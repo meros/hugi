@@ -1,0 +1,163 @@
+set	puzzle	solver	solve_seconds	result	wall_seconds	load
+survey	02712-lion.nin	clingo	1.600	multiple	1.801	load 1.19
+survey	06574-forever.nin	clingo	0.010	unique	0.026	load 1.19
+survey	08098-9-dom.nin	clingo	0.090	unique	0.097	load 1.66
+survey	02712-lion.nin	chuffed-pos	4.649	multiple	6.909	load 1.66
+survey	06574-forever.nin	chuffed-pos	0.008	unique	0.450	load 1.66
+survey	08098-9-dom.nin	chuffed-pos	0.101	unique	0.331	load 1.84
+survey	09892-nature.nin	clingo	51.380	multiple	51.532	load 3.06
+survey	02712-lion.nin	gecode		timeout	60.489	load 3.13
+survey	02712-lion.nin	chuffed		timeout	61.329	load 3.13
+survey	06574-forever.nin	gecode	0.102	unique	0.444	load 3.13
+survey	08098-9-dom.nin	gecode	0.466	unique	0.801	load 3.20
+survey	09892-nature.nin	chuffed-pos		timeout	60.950	load 3.27
+survey	10088-marley.nin	clingo	20.220	multiple	20.694	load 3.38
+survey	10810-center.nin	clingo	2.200	multiple	2.607	load 3.43
+survey	06574-forever.nin	chuffed	22.452	unique	23.190	load 3.43
+survey	10088-marley.nin	chuffed-pos	40.865	multiple	45.384	load 3.79
+survey	10810-center.nin	chuffed-pos	0.026	multiple	4.482	load 3.80
+survey	09892-nature.nin	gecode		timeout	60.184	load 3.80
+survey	08098-9-dom.nin	chuffed	52.355	unique	52.853	load 3.99
+survey	12548-sierp.nin	clingo		timeout	60.007	load 3.99
+survey	10088-marley.nin	gecode		timeout	60.195	load 4.04
+survey	12548-sierp.nin	chuffed-pos		timeout	61.257	load 4.04
+survey	10810-center.nin	gecode	0.011	multiple	0.542	load 4.04
+survey	18297-thing.nin	clingo	46.410	multiple	46.543	load 4.03
+survey	09892-nature.nin	chuffed		timeout	61.061	load 4.11
+survey	18297-thing.nin	chuffed-pos		timeout	61.819	load 4.10
+survey	12548-sierp.nin	gecode		timeout	60.177	load 4.09
+survey	22336-gettys.nin	clingo		timeout	60.015	load 4.09
+survey	10088-marley.nin	chuffed		timeout	61.596	load 4.08
+random	r50x50-6000.txt	clingo	9.790	multiple	10.015	load 4.07
+random	r50x50-6001.txt	clingo	2.270	multiple	2.526	load 4.06
+random	r50x50-6002.txt	clingo	7.870	multiple	8.106	load 4.05
+random	r50x50-6003.txt	clingo	7.450	multiple	7.706	load 4.35
+survey	18297-thing.nin	gecode		timeout	60.173	load 4.45
+survey	22336-gettys.nin	chuffed-pos		timeout	65.833	load 4.50
+random	r50x50-6000.txt	chuffed-pos	1.381	multiple	4.963	load 4.46
+survey	10810-center.nin	chuffed		timeout	61.980	load 4.42
+random	r50x50-6001.txt	chuffed-pos	1.328	multiple	5.056	load 4.39
+random	r50x50-6002.txt	chuffed-pos	7.151	multiple	10.834	load 4.33
+random	r50x50-6004.txt	clingo		timeout	60.008	load 4.35
+random	r50x50-6003.txt	chuffed-pos	9.282	multiple	13.030	load 4.33
+random	r50x50-6005.txt	clingo	19.380	multiple	19.642	load 4.40
+survey	22336-gettys.nin	gecode		timeout	60.228	load 4.40
+random	r50x50-6006.txt	clingo	0.980	multiple	1.190	load 4.29
+random	r50x50-6007.txt	clingo	10.420	multiple	10.658	load 4.00
+survey	12548-sierp.nin	chuffed		timeout	60.828	load 4.00
+random	r50x50-6004.txt	chuffed-pos		timeout	61.993	load 3.61
+random	r50x50-6008.txt	clingo		timeout	60.009	load 3.48
+survey	18297-thing.nin	chuffed		timeout	60.634	load 3.48
+random	r50x50-6005.txt	chuffed-pos		timeout	63.612	load 3.27
+random	r50x50-6006.txt	chuffed-pos	1.582	multiple	4.715	load 3.23
+random	r50x50-6009.txt	clingo		timeout	60.008	load 3.17
+survey	22336-gettys.nin	chuffed		timeout	62.328	load 3.16
+random	r50x50-6007.txt	chuffed-pos	18.288	multiple	21.860	load 3.16
+random	r50x50-6010.txt	clingo	3.900	multiple	4.104	load 3.16
+random	r50x50-6011.txt	clingo	5.570	multiple	5.738	load 2.98
+random	r50x50-6008.txt	chuffed-pos		timeout	63.070	load 2.39
+random	r60x60-7000.txt	clingo		timeout	60.010	load 2.36
+random	r60x60-7001.txt	clingo	39.810	multiple	40.163	load 2.18
+random	r50x50-6009.txt	chuffed-pos		timeout	61.580	load 2.13
+random	r50x50-6010.txt	chuffed-pos	1.243	multiple	4.062	load 2.12
+random	r50x50-6011.txt	chuffed-pos	11.072	multiple	14.171	load 2.17
+random	r60x60-7002.txt	clingo		timeout	60.009	load 2.17
+random	r60x60-7003.txt	clingo	23.420	multiple	23.848	load 2.11
+random	r60x60-7000.txt	chuffed-pos		timeout	62.585	load 2.15
+random	r60x60-7004.txt	clingo		timeout	60.008	load 2.12
+random	r60x60-7001.txt	chuffed-pos		timeout	64.784	load 2.09
+random	r60x60-7005.txt	clingo		timeout	60.008	load 2.04
+random	r60x60-7002.txt	chuffed-pos		timeout	62.626	load 2.11
+random	r60x60-7006.txt	clingo		timeout	60.009	load 2.12
+random	r60x60-7007.txt	clingo	6.390	multiple	6.790	load 2.11
+random	r60x60-7003.txt	chuffed-pos		timeout	62.288	load 1.87
+random	r60x60-7004.txt	chuffed-pos		timeout	64.055	load 1.33
+random	r60x60-7005.txt	chuffed-pos	32.399	multiple	36.407	load 1.18
+random	r60x60-7006.txt	chuffed-pos		timeout	62.060	load 1.12
+random	r60x60-7007.txt	chuffed-pos	13.101	multiple	16.950	load 1.24
+survey	02712-lion.nin	cpsat1	2.020	multiple	2.205	load 1.24
+survey	06574-forever.nin	cpsat1	0.071	unique	0.266	load 1.22
+survey	08098-9-dom.nin	cpsat1	0.339	unique	0.519	load 1.22
+survey	09892-nature.nin	cpsat1	3.693	multiple	3.879	load 1.20
+survey	10088-marley.nin	cpsat1	8.483	multiple	8.884	load 1.17
+survey	10810-center.nin	cpsat1	0.415	multiple	0.607	load 1.17
+survey	12548-sierp.nin	cpsat1	4.409	multiple	4.593	load 1.15
+survey	18297-thing.nin	cpsat1	8.107	multiple	8.503	load 1.13
+survey	22336-gettys.nin	cpsat1	20.472	multiple	20.670	load 1.09
+random	r50x50-6000.txt	cpsat1	1.480	multiple	1.668	load 1.08
+random	r50x50-6001.txt	cpsat1	5.409	multiple	5.614	load 1.08
+random	r50x50-6002.txt	cpsat1	1.359	multiple	1.547	load 1.08
+random	r50x50-6003.txt	cpsat1	2.257	multiple	2.445	load 1.07
+random	r50x50-6004.txt	cpsat1		timeout	60.192	load 1.02
+random	r50x50-6005.txt	cpsat1	8.611	multiple	8.800	load 1.02
+random	r50x50-6006.txt	cpsat1	0.724	multiple	0.912	load 1.02
+random	r50x50-6007.txt	cpsat1	7.167	multiple	7.356	load 1.01
+random	r50x50-6008.txt	cpsat1	11.736	multiple	11.923	load 1.01
+random	r50x50-6009.txt	cpsat1	17.244	multiple	17.434	load 1.01
+random	r50x50-6010.txt	cpsat1	3.795	multiple	4.202	load 1.01
+random	r50x50-6011.txt	cpsat1	2.593	multiple	2.781	load 1.01
+random	r60x60-7000.txt	cpsat1	45.035	multiple	45.226	load 1.32
+random	r60x60-7001.txt	cpsat1	13.450	multiple	13.642	load 1.25
+random	r60x60-7002.txt	cpsat1		timeout	60.197	load 1.25
+random	r60x60-7003.txt	cpsat1	9.860	multiple	10.053	load 1.21
+random	r60x60-7004.txt	cpsat1	11.153	multiple	11.346	load 1.25
+random	r60x60-7005.txt	cpsat1	8.058	multiple	8.251	load 1.21
+random	r60x60-7006.txt	cpsat1	49.347	multiple	49.539	load 1.17
+random	r60x60-7007.txt	cpsat1	2.650	multiple	2.843	load 1.15
+survey	02712-lion.nin	cpsat	2.268	multiple	2.465	load 1.14
+survey	06574-forever.nin	cpsat	0.077	unique	0.257	load 1.14
+survey	08098-9-dom.nin	cpsat	0.223	unique	0.403	load 1.13
+survey	09892-nature.nin	cpsat	3.922	multiple	4.110	load 1.12
+survey	10088-marley.nin	cpsat	10.253	multiple	10.464	load 2.18
+survey	10810-center.nin	cpsat	0.743	multiple	1.159	load 2.08
+survey	12548-sierp.nin	cpsat	7.391	multiple	7.590	load 3.07
+survey	18297-thing.nin	cpsat	10.260	multiple	10.664	load 3.39
+survey	22336-gettys.nin	cpsat	33.775	multiple	33.998	load 4.75
+random	r50x50-6000.txt	cpsat	1.567	multiple	1.763	load 4.45
+random	r50x50-6001.txt	cpsat	8.564	multiple	8.954	load 3.92
+random	r50x50-6002.txt	cpsat	1.482	multiple	1.681	load 3.69
+random	r50x50-6003.txt	cpsat	4.295	multiple	4.697	load 3.47
+random	r50x50-6004.txt	cpsat		timeout	60.353	load 7.01
+random	r50x50-6005.txt	cpsat	15.171	multiple	15.583	load 6.36
+random	r50x50-6006.txt	cpsat	1.059	multiple	1.260	load 6.36
+random	r50x50-6007.txt	cpsat	10.328	multiple	10.740	load 6.17
+random	r50x50-6008.txt	cpsat	20.274	multiple	20.495	load 6.69
+random	r50x50-6009.txt	cpsat	29.269	multiple	29.474	load 6.96
+random	r50x50-6010.txt	cpsat	3.161	multiple	3.361	load 6.48
+random	r50x50-6011.txt	cpsat	2.693	multiple	2.883	load 6.04
+random	r60x60-7000.txt	cpsat	51.806	multiple	52.248	load 7.05
+random	r60x60-7001.txt	cpsat	20.953	multiple	21.173	load 7.19
+random	r60x60-7002.txt	cpsat		timeout	60.924	load 7.67
+random	r60x60-7003.txt	cpsat	11.862	multiple	12.065	load 7.43
+random	r60x60-7004.txt	cpsat	17.025	multiple	17.251	load 7.03
+random	r60x60-7005.txt	cpsat	12.795	multiple	13.012	load 6.69
+random	r60x60-7006.txt	cpsat		timeout	60.608	load 7.45
+random	r60x60-7007.txt	cpsat	3.474	multiple	3.689	load 7.02
+frontier	r70-8000.txt	cpsat	23.959	multiple	24.367	load 6.31
+frontier	r70-8000.txt	clingo		timeout	60.011	load 3.07
+frontier	r70-8001.txt	cpsat		timeout	60.422	load 6.35
+frontier	r70-8001.txt	clingo		timeout	60.011	load 3.10
+frontier	r70-8002.txt	cpsat		timeout	60.481	load 6.65
+frontier	r70-8002.txt	clingo		timeout	60.011	load 3.00
+frontier	r70-8003.txt	cpsat		timeout	60.702	load 6.34
+frontier	r70-8003.txt	clingo		timeout	60.010	load 2.99
+frontier	r70-8004.txt	cpsat		timeout	60.852	load 6.62
+frontier	r70-8004.txt	clingo		timeout	60.011	load 3.06
+frontier	r70-8005.txt	cpsat		timeout	61.093	load 5.83
+frontier	r70-8005.txt	clingo		timeout	60.011	load 2.77
+frontier	r99-9000.txt	cpsat		timeout	62.189	load 5.86
+frontier	r99-9000.txt	clingo		timeout	60.029	load 2.89
+frontier	r99-9001.txt	cpsat		timeout	61.113	load 5.41
+frontier	r99-9001.txt	clingo		timeout	60.029	load 2.62
+frontier	r99-9002.txt	cpsat		timeout	62.228	load 5.89
+frontier	r99-9002.txt	clingo		timeout	60.031	load 2.88
+frontier	r99-9003.txt	cpsat		timeout	63.037	load 6.11
+frontier	r99-9003.txt	clingo		timeout	60.021	load 2.87
+frontier	r99-9004.txt	cpsat		timeout	61.016	load 6.15
+frontier	r99-9004.txt	clingo		timeout	60.030	load 2.89
+frontier	r99-9005.txt	cpsat		timeout	60.910	load 5.95
+frontier	r99-9005.txt	clingo		timeout	60.038	load 2.92
+unsolved	29-knotty.non	cpsat		timeout	300.556	load 8.15
+unsolved	29-knotty.non	clingo		timeout	300.009	load 1.29
+unsolved	33-faase.non	cpsat		timeout	326.228	load 5.73
+unsolved	33-faase.non	clingo		timeout	300.020	load 1.21

@@ -71,8 +71,8 @@ Hugi on 8 cores against the best other solver on one core, on the hard puzzles o
 
 kissat and CaDiCaL run on Hugi's own CNF encoding (`hugi cnf`), the better of the two we tried: it
 is up to 4.5 times faster for them than the older one, so they are measured at their best (on the
-older encoding kissat needed 427 s for Knotty). Naughty, pbnsolve, nonogrid, grid and Copris are
-slower still on the hard puzzles. Every solver checks uniqueness. Hugi's times are medians of 15
+older encoding kissat needed 427 s for Knotty). Naughty, pbnsolve, nonogrid, grid, Copris, OR-tools CP-SAT,
+Chuffed, Gecode, clingo and Number Loom's solver are slower still on the hard puzzles. Every solver checks uniqueness. Hugi's times are medians of 15
 runs (3 for Knotty and Faase) from a plain `cargo build --release` on an otherwise idle machine
 (Intel Core Ultra 7 258V); a profile-guided build is about 20 % faster on the long puzzles. The
 method, versions and every number are in [compare/RESULTS.md](compare/RESULTS.md).
@@ -243,7 +243,8 @@ The puzzles are the work of their designers, credited in `puzzles/survey.list` a
 `scripts/fetch-unsolved.sh`. Jan Wolter's survey of paint-by-number solvers and webpbn.com made
 the benchmark possible. Thanks to the authors of the solvers compared here for publishing their
 code: Naughty (Wu), pbnsolve (Wolter), nonogrid (tsionyx), grid (Olšák), Copris, kissat and
-CaDiCaL (Biere and others). The papers that shaped the engines are listed in
+CaDiCaL (Biere and others), OR-tools, Chuffed, Gecode, clingo, and Number Loom (Stansifer), a
+nonogram editor worth a look for colour puzzles and its editing tools. The papers that shaped the engines are listed in
 [docs/experiments.md](docs/experiments.md#reading-list).
 
 ## License
