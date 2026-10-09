@@ -1,0 +1,29 @@
+puzzle	solver	seconds	result
+00001-dancer	grid	0.008	unique
+00006-cat	grid	0.011	unique
+00016-knot	grid	0.004	unique
+00021-skid	grid	0.006	unique
+00023-edge	grid	0.008	unique
+00027-bucks	grid	0.005	unique
+00065-mum	grid	0.010	unique
+00436-petro	grid	12.827	unique
+00529-swing	grid	0.004	unique
+00803-light	grid		timeout
+01611-merka	grid	0.014	unique
+01694-tragic	grid	0.034	unique
+02040-hot	grid		timeout
+02413-smoke	grid	0.005	unique
+02556-flag	grid	0.753	multiple
+02712-lion	grid		timeout
+03541-signed	grid	0.910	unique
+04645-mm	grid	0.086	unique
+06574-forever	grid	1.006	unique
+06739-karate	grid	11.981	multiple
+07604-dicap	grid	0.011	unique
+08098-9-dom	grid		timeout
+09892-nature	grid		timeout
+10088-marley	grid		timeout
+10810-center	grid	0.013	multiple
+12548-sierp	grid		timeout
+18297-thing	grid		timeout
+22336-gettys	grid		timeout

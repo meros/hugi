@@ -1,0 +1,8 @@
+rep1 NONO_SEEDS=0,1 NONO_CDCL_THREADS=1 NONO_RETIRE_MS=0 load  1.40 # solved 20/20 par2 47067.5 ms geomean 447.3606 ms
+rep1 X=0                                      load  1.44 # solved 20/20 par2 47878.3 ms geomean 361.2665 ms
+rep1 NONO_SEEDS=1,3,5,0 NONO_CDCL_THREADS=4 NONO_RETIRE_MS=0 load  1.30 # solved 20/20 par2 37807.4 ms geomean 362.4344 ms
+rep1 NONO_SEEDS=1,0,3,5,7,2 NONO_CDCL_THREADS=6 load  1.70 # solved 20/20 par2 48544.9 ms geomean 385.2820 ms
+rep2 NONO_SEEDS=0,1 NONO_CDCL_THREADS=1 NONO_RETIRE_MS=0 load  1.35 # solved 20/20 par2 47712.6 ms geomean 409.7340 ms
+rep2 X=0                                      load  1.57 # solved 20/20 par2 50478.8 ms geomean 410.4554 ms
+rep2 NONO_SEEDS=1,3,5,0 NONO_CDCL_THREADS=4 NONO_RETIRE_MS=0 load  1.90 # solved 20/20 par2 36241.7 ms geomean 354.3091 ms
+rep2 NONO_SEEDS=1,0,3,5,7,2 NONO_CDCL_THREADS=6 load  1.67 # solved 20/20 par2 36094.5 ms geomean 344.0328 ms

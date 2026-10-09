@@ -1,0 +1,57 @@
+puzzle	solver	seconds	result
+00001-dancer	grid	0.068	?
+00001-dancer	copris	0.716	unique
+00006-cat	grid	0.002	unique
+00006-cat	copris	0.979	unique
+00016-knot	grid	0.002	unique
+00016-knot	copris	1.615	unique
+00021-skid	grid	0.001	unique
+00021-skid	copris	0.912	unique
+00023-edge	grid	0.001	unique
+00023-edge	copris	0.685	unique
+00027-bucks	grid	0.001	unique
+00027-bucks	copris	1.135	unique
+00065-mum	grid	0.002	unique
+00065-mum	copris	1.900	unique
+00436-petro	grid	4.184	unique
+00436-petro	copris	1.597	unique
+00529-swing	grid	0.002	unique
+00529-swing	copris	2.051	unique
+00803-light	grid		timeout
+00803-light	copris	1.897	unique
+01611-merka	grid	0.004	unique
+01611-merka	copris	4.229	unique
+01694-tragic	grid	0.086	?
+01694-tragic	copris	2.327	unique
+02040-hot	grid		timeout
+02040-hot	copris	3.802	unique
+02413-smoke	grid	0.002	unique
+02413-smoke	copris	1.250	unique
+02556-flag	grid	0.338	multiple
+02556-flag	copris	2.016	multiple
+02712-lion	grid		timeout
+02712-lion	copris	3.584	multiple
+03541-signed	grid	0.095	?
+03541-signed	copris	3.461	unique
+04645-mm	grid	0.035	unique
+04645-mm	copris	3.525	unique
+06574-forever	grid	0.075	?
+06574-forever	copris	1.991	unique
+06739-karate	grid	0.104	?
+06739-karate	copris	3.019	multiple
+07604-dicap	grid	0.005	unique
+07604-dicap	copris	5.250	unique
+08098-9-dom	grid		timeout
+08098-9-dom	copris	1.118	unique
+09892-nature	grid	0.062	?
+09892-nature	copris	3.926	multiple
+10088-marley	grid	0.059	?
+10088-marley	copris	5.351	multiple
+10810-center	grid	0.071	?
+10810-center	copris	6.325	multiple
+12548-sierp	grid		timeout
+12548-sierp	copris	10.176	multiple
+18297-thing	grid		timeout
+18297-thing	copris	8.241	multiple
+22336-gettys	grid	0.154	?
+22336-gettys	copris	41.080	multiple

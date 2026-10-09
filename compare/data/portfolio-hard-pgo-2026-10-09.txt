@@ -1,0 +1,6 @@
+rep1 NONO_SEEDS=0,1 NONO_CDCL_THREADS=1 NONO_RETIRE_MS=0 load  1.68 # solved 20/20 par2 40480.6 ms geomean 418.7602 ms
+rep1 X=0                                      load  1.86 # solved 20/20 par2 40916.0 ms geomean 357.3515 ms
+rep1 NONO_SEEDS=1,0,3,5,7,2 NONO_CDCL_THREADS=6 load  1.34 # solved 20/20 par2 30768.8 ms geomean 290.1319 ms
+rep2 NONO_SEEDS=0,1 NONO_CDCL_THREADS=1 NONO_RETIRE_MS=0 load  1.35 # solved 20/20 par2 49731.7 ms geomean 411.1737 ms
+rep2 X=0                                      load  1.65 # solved 20/20 par2 46678.2 ms geomean 314.9807 ms
+rep2 NONO_SEEDS=1,0,3,5,7,2 NONO_CDCL_THREADS=6 load  1.82 # solved 20/20 par2 38130.4 ms geomean 328.4499 ms

@@ -1,0 +1,6 @@
+29-knotty run 1: NOT unique 20230 ms load 1.96
+29-knotty run 2: NOT unique 22320 ms load 2.34
+29-knotty run 3: NOT unique 18923 ms load 2.24
+33-faase run 1: NOT unique 122889 ms load 2.89
+33-faase run 2: NOT unique 121444 ms load 3.00
+33-faase run 3: NOT unique 121414 ms load 2.97

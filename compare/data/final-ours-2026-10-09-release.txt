@@ -1,0 +1,10 @@
+puzzle                                       hugi (8 cores, plain build, medians of 15 runs [10th-90th percentile], ms)
+02712-lion                  49 [   40-    66]
+06574-forever               12 [   11-    15]
+08098-9-dom                 55 [   52-    58]
+09892-nature                167 [   92-   309]
+10088-marley                37 [   32-    54]
+10810-center                9 [    8-    10]
+12548-sierp                 180 [  105-   202]
+18297-thing                 729 [  419-  1105]
+22336-gettys                1975 [ 1881-  4402]

@@ -1,0 +1,13 @@
+r70-8000.txt	2177.973	28349	multiple
+r70-8001.txt	60012.745	0	timeout
+r70-8002.txt	60008.678	0	timeout
+r70-8003.txt	40127.099	656237	multiple
+r70-8004.txt	60014.253	0	timeout
+r70-8005.txt	60025.224	0	timeout
+r99-9000.txt	60032.560	0	timeout
+r99-9001.txt	60022.969	0	timeout
+r99-9002.txt	60026.246	0	timeout
+r99-9003.txt	60027.759	0	timeout
+r99-9004.txt	60043.768	0	timeout
+r99-9005.txt	60042.927	0	timeout
+# solved 2/12 par2 1242305.1 ms geomean 78422.7542 ms
