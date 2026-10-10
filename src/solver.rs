@@ -81,6 +81,8 @@ pub struct Config {
     pub cube_arm_depth: u32,
     /// Learning threads beyond the first two stop after this many ms (0 = never).
     pub retire_ms: u64,
+    /// The first learning threads that never retire.
+    pub keep_threads: usize,
 }
 
 impl Config {
@@ -105,6 +107,7 @@ impl Config {
         cube_arm: 0,
         cube_arm_depth: 8,
         retire_ms: 3000,
+        keep_threads: 2,
     };
 
     fn from_env() -> Config {
@@ -131,6 +134,7 @@ impl Config {
             cube_arm: get("NONO_CUBE_ARM").map_or(d.cube_arm, |v| v as usize),
             cube_arm_depth: get("NONO_CUBE_ARM_DEPTH").map_or(d.cube_arm_depth, |v| v as u32),
             retire_ms: get("NONO_RETIRE_MS").unwrap_or(d.retire_ms),
+            keep_threads: get("NONO_KEEP_THREADS").map_or(d.keep_threads, |v| v as usize),
         }
     }
 }
@@ -1226,7 +1230,7 @@ pub fn solve_within(p: &Puzzle, threads: usize, limit: Option<Duration>) -> Outc
                 // wide start finds quick answers, and fewer busy cores keep
                 // the clock up for the long-running engines (Faase took
                 // 125 s with 3 busy threads, 229 s with 7).
-                let lim = if i >= 2 && cfg.retire_ms > 0 {
+                let lim = if i >= cfg.keep_threads && cfg.retire_ms > 0 {
                     let r = Instant::now() + Duration::from_millis(cfg.retire_ms);
                     Some(limit_at.map_or(r, |l| l.min(r)))
                 } else {

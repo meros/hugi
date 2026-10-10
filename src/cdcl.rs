@@ -224,6 +224,14 @@ struct Solver<'a> {
     /// Minimisation: 0 plain, 1 caches failures, 2 also tests levels
     /// first, 3 depth-first search that records every result (`removable`).
     minimise: u8,
+    /// Clause tiers, reason-side bumping up to this many literals (0 off), the first reduction
+    /// and its growth, the glue kept for ever, and the conflicts between vivification rounds.
+    tiers: bool,
+    reason_bump: usize,
+    reduce_first: u64,
+    reduce_inc: u64,
+    keep_lbd: u32,
+    vivify_every: u64,
     expl_cache: Vec<ExplEntry>,
     stats: Stats,
 }
@@ -296,6 +304,12 @@ impl<'a> Solver<'a> {
             // default for strategy 0 for a day: sound, but it changes which
             // explanations get built, and Knotty went from 23 s to over 600 s.
             minimise: 1,
+            tiers: false,
+            reason_bump: 0,
+            reduce_first: 2000,
+            reduce_inc: 300,
+            keep_lbd: 2,
+            vivify_every: 2000,
             expl_cache: vec![ExplEntry { line: u32::MAX, goal: 0, f: 0, e: 0, rf: 0, re: 0 }; 1 << EXPL_CACHE_BITS],
             stats: Stats {
                 first_solution_ns: 0,
@@ -1261,7 +1275,7 @@ impl<'a> Solver<'a> {
         // Reason-side bumping (kissat): the variables that forced the
         // clause's literals matter too. Only reasons at hand: clauses and
         // explanations already built.
-        if keep.len() <= reason_bump() {
+        if keep.len() <= self.reason_bump {
             let mut reasons = std::mem::take(&mut self.tmp2);
             for i in 0..keep.len() {
                 let v = var(keep[i]);
@@ -1644,7 +1658,7 @@ impl<'a> Solver<'a> {
     fn touch_clause(&mut self, c: u32) {
         let c = c as usize;
         let f = self.arena[c + 1];
-        if f & LEARNT == 0 || !tiers() {
+        if f & LEARNT == 0 || !self.tiers {
             return;
         }
         let mut lbd = f & LBD_MASK;
@@ -1747,8 +1761,8 @@ impl<'a> Solver<'a> {
 
     fn reduce_db(&mut self) {
         let lbd = |s: &Self, c: u32| s.arena[c as usize + 1] & LBD_MASK;
-        let mut cand: Vec<u32> = self.learnts.iter().copied().filter(|&c| lbd(self, c) > 2).collect();
-        if tiers() {
+        let mut cand: Vec<u32> = self.learnts.iter().copied().filter(|&c| lbd(self, c) > self.keep_lbd).collect();
+        if self.tiers {
             // A clause used since the last reduction stays for this round
             // (LBD up to 6: two rounds); the rest go by LBD, then size.
             let arena = &mut self.arena;
@@ -1888,40 +1902,32 @@ fn verbose() -> bool {
 fn strategy(seed: u64) -> Options {
     let d = options();
     let on = |k: &str| std::env::var(k).is_ok_and(|v| v != "0");
-    match seed {
-        1 => Options {
-            target: on("NONO_S1_TARGET"),
-            modes: on("NONO_S1_MODES"),
-            rephase: false,
-            aux: true,
-            lines: !on("NONO_S1_NOLINES"),
-            glucose: d.glucose,
-            warmup: d.warmup,
-            rootprobe: d.rootprobe,
-            share_clauses: d.share_clauses,
-        },
-        // Strategy 1 plus probing at level 0. Measured 2026-10-09 on random
-        // 50x50/60x60 puzzles: often 2-3x faster than strategy 1, sometimes
-        // 5x slower, so it runs next to strategy 1, not instead of it. (The
-        // kissat-style core this slot held before added nothing measurable;
-        // NONO_MODES etc. still reach it through the default strategy.)
-        2 => Options {
-            target: false,
-            modes: false,
-            rephase: false,
-            aux: true,
-            lines: true,
-            glucose: d.glucose,
-            warmup: d.warmup,
-            rootprobe: true,
-            share_clauses: d.share_clauses,
-        },
-        s if s >= 3 && s % 2 == 1 => strategy(1),
-        _ => d,
+    let aux = seed == 1 || seed == 2 || (seed >= 3 && seed % 2 == 1);
+    if !aux {
+        return Options {
+            target: flag_for("NONO_TARGET", seed, true, d.target),
+            modes: flag_for("NONO_MODES", seed, true, d.modes),
+            rephase: flag_for("NONO_REPHASE", seed, true, d.rephase),
+            glucose: flag_for("NONO_GLUCOSE", seed, true, d.glucose),
+            warmup: flag_for("NONO_WARMUP", seed, true, d.warmup),
+            ..d
+        };
+    }
+    Options {
+        target: on("NONO_S1_TARGET") || flag_for("NONO_TARGET", seed, false, false),
+        modes: on("NONO_S1_MODES") || flag_for("NONO_MODES", seed, false, false),
+        rephase: flag_for("NONO_REPHASE", seed, false, false),
+        aux: true,
+        lines: !on("NONO_S1_NOLINES"),
+        glucose: flag_for("NONO_GLUCOSE", seed, true, d.glucose),
+        warmup: flag_for("NONO_WARMUP", seed, true, d.warmup),
+        // Strategy 2 is strategy 1 plus probing at level 0 (measured 2026-10-09: often 2-3x
+        // faster than strategy 1 on random 50x50/60x60 puzzles, sometimes 5x slower).
+        rootprobe: seed == 2 || d.rootprobe,
+        share_clauses: d.share_clauses,
     }
 }
 
-/// Reason-side bumping for learned clauses up to this many literals (0 off).
 /// A conflict budget for measurements (NONO_MAX_CONFLICTS): the result
 /// then does not depend on machine load.
 fn max_conflicts() -> u64 {
@@ -1929,19 +1935,32 @@ fn max_conflicts() -> u64 {
     *M.get_or_init(|| std::env::var("NONO_MAX_CONFLICTS").ok().and_then(|v| v.parse().ok()).unwrap_or(u64::MAX))
 }
 
-fn reason_bump() -> usize {
-    static R: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
-    *R.get_or_init(|| std::env::var("NONO_REASON_BUMP").ok().and_then(|v| v.parse().ok()).unwrap_or(0))
+/// The setting `name` for the strategy `seed`, from the environment: `NAME_S<seed>` first, then
+/// the strategy it copies (`NAME_S1` for the odd seeds from 3 and for 2, `NAME_S0` for the
+/// even seeds from 4), then, when `global`, plain `NAME`. This lets a tuning run give each
+/// strategy its own parameters (the tuning matrix, tune/matrix.py).
+fn env_for(name: &str, seed: u64, global: bool) -> Option<String> {
+    let family = match seed {
+        0 => None,
+        1 => None,
+        2 => Some(1),
+        s if s % 2 == 1 => Some(1),
+        _ => Some(0),
+    };
+    let var = |k: u64| std::env::var(format!("{name}_S{k}")).ok();
+    var(seed).or_else(|| family.and_then(var)).or_else(|| if global { std::env::var(name).ok() } else { None })
 }
 
-/// Minimisation: 1 caches failures, 2 also tests levels first.
+fn num_for<T: std::str::FromStr>(name: &str, seed: u64, global: bool) -> Option<T> {
+    env_for(name, seed, global).and_then(|v| v.parse().ok())
+}
+
+fn flag_for(name: &str, seed: u64, global: bool, default: bool) -> bool {
+    env_for(name, seed, global).map_or(default, |v| v != "0")
+}
+
 fn env_num<T: std::str::FromStr>(k: &str) -> Option<T> {
     std::env::var(k).ok().and_then(|v| v.parse().ok())
-}
-
-fn tiers() -> bool {
-    static T: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *T.get_or_init(|| std::env::var("NONO_TIERS").is_ok_and(|v| v != "0"))
 }
 
 fn minimise_all() -> bool {
@@ -2061,18 +2080,24 @@ pub fn solve(
             s.vivify_n = 400;
         }
     }
-    if let Some(v) = env_num::<u8>("NONO_POISON") {
+    if let Some(v) = num_for::<u8>("NONO_POISON", seed, true) {
         s.minimise = v;
     }
-    if let Some(v) = env_num::<u64>("NONO_SHRINK") {
+    if let Some(v) = num_for::<u64>("NONO_SHRINK", seed, true) {
         s.shrink = v != 0;
     }
-    if let Some(v) = env_num::<f64>("NONO_DECAY") {
+    if let Some(v) = num_for::<f64>("NONO_DECAY", seed, true) {
         s.decay = v;
     }
-    if let Some(v) = env_num::<usize>("NONO_VIVIFY") {
+    if let Some(v) = num_for::<usize>("NONO_VIVIFY", seed, true) {
         s.vivify_n = v;
     }
+    s.tiers = flag_for("NONO_TIERS", seed, true, false);
+    s.reason_bump = num_for("NONO_REASON_BUMP", seed, true).unwrap_or(0);
+    s.reduce_first = num_for::<u64>("NONO_REDUCE_FIRST", seed, true).unwrap_or(2000).max(1);
+    s.reduce_inc = num_for("NONO_REDUCE_INC", seed, true).unwrap_or(300);
+    s.keep_lbd = num_for("NONO_KEEP_LBD", seed, true).unwrap_or(2);
+    s.vivify_every = num_for::<u64>("NONO_VIVIFY_EVERY", seed, true).unwrap_or(2000).max(1);
     s.lines = !(opt.aux && !opt.lines);
     if let Some((_, clauses)) = &encoded {
         let to_lit = |x: i64| lit((x.unsigned_abs() - 1) as usize, x < 0);
@@ -2091,7 +2116,8 @@ pub fn solve(
             }
         }
     }
-    let mut restart_unit = env_num::<u64>("NONO_RESTART_UNIT").unwrap_or(100);
+    let unit_env = num_for::<u64>("NONO_RESTART_UNIT", seed, true);
+    let mut restart_unit = unit_env.unwrap_or(100);
     if seed >= 3 {
         let mut x = seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1;
         let mut rnd = move || {
@@ -2111,7 +2137,7 @@ pub fn solve(
         for v in 0..s.nv {
             s.heap_insert(v);
         }
-        restart_unit = [100, 50, 200, 150][(seed % 4) as usize];
+        restart_unit = unit_env.unwrap_or([100, 50, 200, 150][(seed % 4) as usize]);
     }
     let mut sols: Vec<Grid> = Vec::new();
     let done = |s: Solver, sols: Vec<Grid>, timed_out: bool| Outcome {
@@ -2155,8 +2181,8 @@ pub fn solve(
     let mut restart_no = 1u64;
     let mut budget = restart_unit * luby(restart_no);
     let mut since_restart = 0u64;
-    let mut next_reduce = 2000u64;
-    let mut next_vivify = 2000u64;
+    let mut next_reduce = s.reduce_first;
+    let mut next_vivify = s.vivify_every;
     loop {
         let tp = Instant::now();
         let conflict = s.propagate();
@@ -2217,7 +2243,7 @@ pub fn solve(
             }
             if s.stats.conflicts >= next_reduce {
                 s.reduce_db();
-                next_reduce += 2000 + 300 * (next_reduce / 2000);
+                next_reduce += s.reduce_first + s.reduce_inc * (next_reduce / s.reduce_first);
             }
             continue;
         }
@@ -2248,7 +2274,7 @@ pub fn solve(
             s.cancel_until(0);
             if s.vivify_n > 0 && s.stats.conflicts >= next_vivify {
                 s.vivify(s.vivify_n);
-                next_vivify = s.stats.conflicts + 2000;
+                next_vivify = s.stats.conflicts + s.vivify_every;
                 if s.unsat {
                     return done(s, sols, false);
                 }
