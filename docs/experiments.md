@@ -73,6 +73,41 @@ Decisions: **kept** (a default), **setting** (in the code, off by default), **dr
 | Cube-and-conquer: below a depth the probing search hands its partial grid to a learning solver (`NONO_CUBE_DEPTH`) | alone it solves a 60×60 the portfolio does not (34 s) but loses on others; in the portfolio 17/20 against 15/20 | setting |
 | A cube arm on idle cores (`NONO_CUBE_ARM`) | 33/40 against 32/40, within the noise | setting |
 
+## The 24-hour tuning matrix (2026-10-10/11)
+
+`tune/matrix.py` ran 20.7 hours on an idle machine: 245 puzzles (9 survey, generated 30×30 to
+60×60 at several densities, picture-like), each learning strategy tuned by instruction count,
+then 68 random portfolio configurations screened and the best confirmed on puzzles never used
+for a choice. Report: `compare/data/matrix-2026-10-11-report.md`.
+
+- **Portfolio parameters: no change.** Threads, strategy list, retirement time, fact sharing,
+  pinning, cache size, probe scoring. Screening on 39 puzzles with one run each showed the best
+  configuration at 0.77 of the default; on 127 puzzles with two runs the best was 0.96, and on
+  new puzzles with three runs 0.98. The first number was selection among 68. The defaults stay.
+- **Strategy 0 (cells only): rejected.** The tuned settings (decay 0.9, restart unit 200, clause
+  tiers, vivification, poison 2, shrinking) cost half the instructions on the tuning puzzles,
+  but Knotty then times out at 120 s (default 19-32 s), in both repetitions, and so does each
+  group of the settings alone, down to restart unit 200 by itself. Knotty is a puzzle where strategy 0
+  with its default settings is fast; the tuning set had no long puzzle to show it.
+- **Strategy 1 (block positions): adopted.** Clause tiers, a first database reduction after 1000
+  conflicts (was 2000) and vivification every 4000 conflicts (was 2000). Interleaved, median of
+  repeats, 8 cores, against the old defaults:
+
+  | set | geometric mean | unsolved in 30 s | seconds in total |
+  |---|---|---|---|
+  | 16 random 50×50 at 40 % density | 0.72 | 8 to 6 | 557 to 458 |
+  | 32 random 50×50 at 50 % | 0.99 | 1 to 0 | 70 to 44 |
+  | 20 random 60×60 at 50 % | 0.93 | 5 to 5 | 338 to 340 |
+  | Faase (2 runs) | 1.05 | 0 | 130 to 137 |
+  | Knotty (2 runs) | level | 0 | 19 and 32 s against 24 and 32 s |
+
+  The 50×50 set at 40 % is the one that matters; the rest are level within the spread. The
+  new default binary gave 0.80 on the 40 % set in a separate single run (512 to 456 s).
+  Data: `compare/data/ab-*.jsonl`.
+- **Method note.** The check on new puzzles in stage 2 was too easy to confirm anything (6
+  puzzles, 3 G in total), and the tuning set held no puzzle that only strategy 0's defaults
+  solve. A tuner needs a held-out set with the hard puzzles in it.
+
 ## Reference points
 
 Measured 2026-10-08 on one performance core, before the lean encoding: kissat 4.0.4 on Gettys

@@ -2092,12 +2092,19 @@ pub fn solve(
     if let Some(v) = num_for::<usize>("NONO_VIVIFY", seed, true) {
         s.vivify_n = v;
     }
-    s.tiers = flag_for("NONO_TIERS", seed, true, false);
+    // Block-position strategies: clause tiers, a first reduction after 1000 conflicts and
+    // vivification every 4000. Chosen by the 24 h tuning matrix (docs/experiments.md): on 16
+    // random 50x50 puzzles at 40 % density, 28 % less time and 2 more solved in 30 s; level on
+    // r50, r60, Knotty and Faase. The same search on strategy 0 timed out on Knotty, so it
+    // keeps its own.
+    s.tiers = flag_for("NONO_TIERS", seed, true, opt.aux);
     s.reason_bump = num_for("NONO_REASON_BUMP", seed, true).unwrap_or(0);
-    s.reduce_first = num_for::<u64>("NONO_REDUCE_FIRST", seed, true).unwrap_or(2000).max(1);
+    s.reduce_first =
+        num_for::<u64>("NONO_REDUCE_FIRST", seed, true).unwrap_or(if opt.aux { 1000 } else { 2000 }).max(1);
     s.reduce_inc = num_for("NONO_REDUCE_INC", seed, true).unwrap_or(300);
     s.keep_lbd = num_for("NONO_KEEP_LBD", seed, true).unwrap_or(2);
-    s.vivify_every = num_for::<u64>("NONO_VIVIFY_EVERY", seed, true).unwrap_or(2000).max(1);
+    s.vivify_every =
+        num_for::<u64>("NONO_VIVIFY_EVERY", seed, true).unwrap_or(if opt.aux { 4000 } else { 2000 }).max(1);
     s.lines = !(opt.aux && !opt.lines);
     if let Some((_, clauses)) = &encoded {
         let to_lit = |x: i64| lit((x.unsigned_abs() - 1) as usize, x < 0);
