@@ -1,0 +1,298 @@
+ac_unit	Snowflake	1
+airplanemode_active	Airplane	1
+airport_shuttle	Shuttle bus	1
+alarm	Alarm clock	3
+anchor	Anchor	1
+apartment	Apartment block	5
+attractions	Ferris wheel	2
+backpack	Backpack	4
+bathtub	Bathtub	1
+battery_full	Battery	3
+beach_access	Beach umbrella	2
+bed	Bed	1
+biotech	Microscope	5
+blender	Blender	5
+bolt	Lightning bolt	3
+book	Book	5
+brush	Paintbrush	2
+bug_report	Beetle	4
+build	Wrench	5
+bungalow	Bungalow	5
+business_center	Briefcase	5
+cabin	Cabin	4
+cake	Cake	2
+camera_alt	Camera	5
+campaign	Megaphone	2
+car_repair	Car	1
+castle	Castle	5
+celebration	Party popper	3
+chair	Armchair	5
+chair_alt	Chair	5
+chalet	Chalet	5
+checkroom	Coat hanger	5
+church	Church	5
+cloud	Cloud	1
+coffee	Coffee cup	5
+coffee_maker	Coffee maker	5
+construction	Roadworks	3
+cookie	Cookie	3
+cruelty_free	Rabbit	4
+desktop_windows	Computer screen	5
+diamond	Diamond	1
+directions_boat	Boat	1
+directions_bus	Bus	1
+directions_railway	Train	1
+directions_run	Runner	4
+directions_subway	Subway train	1
+directions_walk	Walker	4
+downhill_skiing	Skier	1
+dry_cleaning	Shirt on hanger	1
+eco	Leaf	4
+egg	Egg	3
+egg_alt	Fried egg	3
+electric_moped	Moped	1
+emoji_events	Trophy	3
+emoji_food_beverage	Tea cup	2
+emoji_objects	Light bulb	3
+emoji_people	Waving person	2
+extension	Puzzle piece	4
+face_4	Girl	2
+face_6	Man	2
+factory	Factory	5
+family_restroom	Family	2
+fastfood	Burger and drink	2
+favorite	Love heart	2
+filter_vintage	Flower	2
+fire_extinguisher	Fire extinguisher	2
+fire_hydrant_alt	Fire hydrant	2
+fire_truck	Fire engine	2
+flag	Flag	2
+flatware	Cutlery	5
+flight	Plane	1
+flight_takeoff	Plane taking off	1
+forest	Forest	4
+forklift	Forklift	3
+fort	Fort	5
+free_breakfast	Mug	5
+front_hand	Hand	2
+gavel	Gavel	5
+goat	Goat	4
+handyman	Hammer and wrench	5
+headphones	Headphones	3
+headset_mic	Headset	5
+health_and_safety	Cross shield	2
+hearing	Ear	2
+heart_broken	Broken heart	2
+hiking	Hiker	4
+home	Home	2
+home_repair_service	Toolbox	5
+hourglass_empty	Hourglass	3
+house_siding	Cottage	5
+ice_skating	Ice skater	1
+icecream	Ice cream	2
+iron	Iron	5
+kayaking	Kayak	1
+key	Key	3
+kitchen	Fridge	1
+landscape	Mountains	4
+laptop_mac	Laptop	5
+light	Ceiling lamp	3
+lightbulb	Bulb	3
+local_bar	Cocktail	2
+local_drink	Drink	1
+local_fire_department	Flame	2
+local_gas_station	Petrol pump	2
+local_grocery_store	Shopping cart	2
+local_laundry_service	Washing machine	1
+local_mall	Shopping bag	2
+local_movies	Film	5
+local_offer	Price tag	2
+local_pizza	Pizza	2
+local_play	Ticket	3
+local_police	Police badge	1
+local_printshop	Printer	5
+local_shipping	Lorry	1
+local_taxi	Taxi	3
+location_city	City	5
+location_on	Map pin	2
+lock	Padlock	5
+lock_open	Open padlock	5
+luggage	Suitcase	5
+lunch_dining	Hamburger	2
+mail	Letter	2
+masks	Theatre masks	2
+memory	Chip	5
+mic	Microphone	5
+mood	Happy face	3
+mosque	Mosque	5
+motorcycle	Motorbike	1
+mouse	Computer mouse	5
+movie	Clapperboard	5
+museum	Museum	5
+music_note	Music note	3
+nature	Tree	4
+newspaper	Newspaper	5
+nightlight_round	Moon	3
+notifications	Bell	3
+outdoor_grill	Barbecue	2
+palette	Paint palette	2
+park	Park tree	4
+pedal_bike	Bicycle	1
+person	Person	2
+pest_control	Bug	4
+pest_control_rodent	Mouse	4
+pets	Paw print	4
+phone_iphone	Mobile phone	5
+piano	Piano	5
+pool	Swimmer	1
+push_pin	Drawing pin	2
+radio	Radio	5
+ramen_dining	Noodles	2
+restaurant	Restaurant	5
+rice_bowl	Rice bowl	2
+rocket	Rocket	1
+rocket_launch	Rocket launch	1
+room_service	Serving bell	3
+rv_hookup	Camper van	1
+sailing	Sailing boat	1
+savings	Piggy bank	2
+school	School	5
+science	Flask	1
+shield	Shield	1
+shopping_basket	Basket	2
+shower	Shower	1
+skateboarding	Skateboarder	1
+snowboarding	Snowboarder	1
+spa	Lotus	2
+speaker	Speaker	5
+speed	Speedometer	1
+sports_baseball	Baseball	2
+sports_basketball	Basketball	2
+sports_bar	Beer	3
+sports_esports	Game controller	5
+sports_football	American football	2
+sports_motorsports	Racing helmet	2
+sports_rugby	Rugby ball	2
+sports_soccer	Football	5
+sports_tennis	Tennis racket	4
+sports_volleyball	Volleyball	3
+stadium	Stadium	5
+star	Star	3
+stars	Stars	3
+storefront	Shop	2
+subway	Underground	1
+sunny	Bright sun	3
+table_restaurant	Table	5
+telegram	Paper plane	1
+temple_buddhist	Temple	3
+terrain	Hills	4
+theater_comedy	Theatre	2
+theaters	Cinema	5
+thermostat	Thermometer	2
+thumb_up	Thumbs up	2
+tornado	Tornado	1
+traffic	Traffic light	2
+train	High speed train	1
+tram	Tram	1
+tsunami	Wave	1
+tv	Television	5
+umbrella	Umbrella	1
+volcano	Volcano	2
+watch	Watch	5
+water_drop	Water drop	1
+waving_hand	Waving hand	3
+weekend	Sofa	2
+wheelchair_pickup	Wheelchair	1
+whatshot	Fire	2
+window	Window	1
+wine_bar	Wine glass	2
+woman	Woman standing	2
+man	Man standing	2
+account_balance	Bank	5
+auto_stories	Story book	5
+bloodtype	Blood drop	2
+cell_tower	Radio mast	5
+child_friendly	Pushchair	1
+cleaning_services	Broom	3
+computer	Desktop computer	5
+directions_bike	Cyclist	1
+directions_boat_filled	Ferry	1
+domain	Office	5
+filter_drama	Cloud and sun	1
+flashlight_on	Torch	3
+folder_special	Special folder	3
+gite	Hut	4
+group	People	2
+hardware	Hammer	5
+healing	Plaster	2
+hive	Beehive	3
+keyboard	Keyboard	5
+leaderboard	Podium	3
+liquor	Bottle	4
+local_phone	Telephone	5
+looks	Rainbow	2
+pie_chart	Pie	2
+power	Power plug	3
+public	Globe	1
+radar	Radar	4
+roller_skating	Roller skate	1
+self_improvement	Meditation	2
+signpost	Signpost	5
+smart_toy	Robot	5
+south_america	South America	4
+sports_cricket	Cricket	5
+sports_mma	Boxing glove	2
+square_foot	Set square	5
+support	Life ring	2
+thunderstorm	Thunderstorm	1
+vaccines	Syringe	2
+view_in_ar	Cube	1
+workspace_premium	Rosette	3
+content_cut	Scissors	5
+attach_file	Paperclip	5
+edit	Pencil	3
+format_paint	Paint roller	1
+redeem	Gift	2
+visibility	Eye	1
+album	Record	5
+videocam	Video camera	5
+light_mode	Sunburst	3
+calculate	Calculator	5
+sports_score	Chequered flag	5
+wb_twilight	Sunset	3
+description	Document	5
+insert_drive_file	Page	5
+photo_album	Photo album	5
+image	Picture	4
+sports_martial_arts	Martial artist	2
+usb	USB stick	5
+sd_card	Memory card	5
+tablet_mac	Tablet	5
+desktop_mac	Desktop mac	5
+fax	Fax machine	5
+explore	Compass	1
+search	Magnifying glass	1
+delete	Bin	5
+settings	Gear	5
+schedule	Clock	3
+timer	Stopwatch	3
+stairs	Stairs	5
+holiday_village	Village	5
+corporate_fare	Tower block	5
+speaker_group	Speakers	5
+camera	Compact camera	5
+assignment	Clipboard	5
+markunread_mailbox	Mailbox	2
+volume_up	Loudspeaker	5
+call	Phone call	5
+payments	Banknotes	4
+cloudy_snowing	Snow cloud	1
+air	Wind	1
+agriculture	Tractor	4
+villa	Villa	5
+synagogue	Synagogue	5
+local_florist	Flower vase	2
+fence	Fence	5
+golf_course	Golf hole	4
+hotel	Hotel	5
+queue_music	Music queue	3

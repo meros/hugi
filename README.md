@@ -245,7 +245,7 @@ the benchmark possible. Thanks to the authors of the solvers compared here for p
 code: Naughty (Wu), pbnsolve (Wolter), nonogrid (tsionyx), grid (Olšák), Copris, kissat and
 CaDiCaL (Biere and others), OR-tools, Chuffed, Gecode, clingo, and Number Loom (Stansifer), a
 nonogram editor worth a look for colour puzzles and its editing tools. The papers that shaped the engines are listed in
-[docs/experiments.md](docs/experiments.md#reading-list).
+[docs/experiments.md](docs/experiments.md#reading-list). The pictures of 10×10 and larger in the game are made from Material Icons by Google (Apache License 2.0); the others are drawn for Hugi.
 
 ## License
 
