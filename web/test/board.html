@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hugi board check</title>
+<link rel="icon" href="data:,">
+<style>
+  /* The page's theme variables, copied from index.html so that the board looks as it does in the game. */
+  :root {
+    --bg: #e6dabd; --panel: #f6efdc; --ink: #2a2118; --muted: #6e604c;
+    --line: #d2c5a4; --heavy: #7a6848; --glow: rgba(255, 255, 255, .28); --stitch: #2e4a73; --madder: #a63d2a;
+    --madder-fill: rgba(166, 61, 42, .22); --hint-fill: rgba(46, 74, 115, .14);
+    --good: #3f6b3a; --warn: #a96a10; --bad: #9c2b23; --shadow: rgba(60, 40, 10, .18);
+    --t1: #2e4a73; --t2: #a63d2a; --t3: #c48a12; --t4: #4f6b34; --t5: #2a2118;
+    --serif: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", P052, Georgia, serif;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141b; --panel: #19202a; --ink: #ece3cf; --muted: #98a0a8;
+    --line: #2a3441; --heavy: #6d7b8c; --stitch: #7aa2e0; --madder: #e0765f; --glow: rgba(110, 130, 165, .12);
+    --madder-fill: rgba(224, 118, 95, .28); --hint-fill: rgba(122, 162, 224, .18);
+    --good: #8cc07a; --warn: #e6b04a; --bad: #f2877f; --shadow: rgba(0, 0, 0, .5);
+    --t1: #7aa2e0; --t2: #e0765f; --t3: #e8b94a; --t4: #8cb36a; --t5: #e9dfc8;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; padding: 1rem; color: var(--ink); font: 15px/1.5 var(--serif); }
+  button, select { font: inherit; font-size: .92rem; color: var(--ink); background: var(--panel);
+                   border: 2px dashed var(--heavy); border-radius: 8px; padding: .22rem .6rem; cursor: pointer; }
+  button:hover { border-style: solid; background: var(--line); }
+  button[aria-pressed="true"] { border-style: solid; border-color: var(--stitch); color: var(--stitch); font-weight: 700; }
+  button:focus-visible, canvas:focus-visible { outline: 3px solid var(--stitch); outline-offset: 2px; }
+  .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .8rem; }
+  .board-wrap { border: 3px double var(--heavy); border-radius: 10px; padding: .9rem; overflow: auto;
+                display: flex; justify-content: center; align-items: flex-start; background-color: var(--panel);
+                box-shadow: 0 6px 18px var(--shadow);
+                background-image: repeating-linear-gradient(0deg, rgba(120, 100, 60, .07) 0 1px, transparent 1px 3px),
+                                  repeating-linear-gradient(90deg, rgba(120, 100, 60, .07) 0 1px, transparent 1px 3px); }
+  #log { color: var(--muted); font: 12px/1.4 ui-monospace, monospace; margin-top: .6rem; min-height: 3em; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div class="bar" id="bar">
+  <button data-tool="fill" aria-pressed="true">Fill (1)</button>
+  <button data-tool="mark" aria-pressed="false">Mark (2)</button>
+  <button data-tool="move" aria-pressed="false">Move</button>
+  <button id="undo">Undo</button>
+  <button id="redo">Redo</button>
+  <select id="size" aria-label="Puzzle"></select>
+  <button id="reload">Reload</button>
+  <button id="solve">Fill solution</button>
+  <button id="reveal">Reveal</button>
+  <button id="hint">Hint row</button>
+  <button id="wrong">Show wrong</button>
+  <button id="theme">Night</button>
+</div>
+<div class="board-wrap" id="wrap"><canvas id="board" aria-label="The puzzle board"></canvas></div>
+<div id="log" aria-live="polite"></div>
+<script type="module">
+import { Board } from "../game/board.js";
+import { cluesOf, runs } from "../grid.js";
+
+const $ = (id) => document.getElementById(id);
+
+// Pictures: the Maker's heart, and computed ones for the larger sizes.
+const HEART = `
+...............
+..###.....###..
+.#####...#####.
+#######.#######
+###############
+###############
+###############
+.#############.
+..###########..
+...#########...
+....#######....
+.....#####.....
+......###......
+.......#.......
+...............`;
+const fromText = (t) => t.trim().split("\n").map((l) => [...l].map((c) => (c === "#" ? 1 : 0)));
+const computed = (n, f) => Array.from({ length: n }, (_, y) => Array.from({ length: n }, (_, x) => (f(x, y, n) ? 1 : 0)));
+const PICTURES = {
+  "heart 15x15": { cells: fromText(HEART), thread: 2 },
+  "rings 25x25": { cells: computed(25, (x, y, n) => Math.floor(Math.hypot(x - (n - 1) / 2, y - (n - 1) / 2)) % 4 < 2), thread: 1 },
+  "sierpinski 32x32": { cells: computed(32, (x, y) => (x & y) === 0), thread: 4 },
+  "rings 40x40": { cells: computed(40, (x, y, n) => Math.floor(Math.hypot(x - (n - 1) / 2, y - (n - 1) / 2)) % 5 < 2), thread: 3 },
+  "tiny 5x5": { cells: fromText("..#..\n.###.\n#####\n.###.\n..#.."), thread: 5 },
+};
+for (const name of Object.keys(PICTURES)) $("size").append(new Option(name, name));
+const query = new URLSearchParams(location.search);
+$("size").value = Object.keys(PICTURES).find((k) => k.startsWith(query.get("p") ?? "heart")) ?? "heart 15x15";
+
+function puzzleOf(name) {
+  const { cells, thread } = PICTURES[name];
+  const h = cells.length;
+  const w = cells[0].length;
+  const solution = Uint8Array.from(cells.flat());
+  const { rows, cols } = cluesOf(w, h, solution);
+  return { id: name, name, w, h, solution, rows, cols, thread, tier: "test", kind: "pack" };
+}
+
+// A stand-in for the solver's line_status: done = the filled cells form the clue; impossible = no placement fits.
+function feasible(line, clue) {
+  const n = line.length;
+  const memo = new Map();
+  const go = (pos, j) => {
+    const key = pos * 1000 + j;
+    if (memo.has(key)) return memo.get(key);
+    let ok = false;
+    if (j === clue.length) ok = line.slice(pos).every((v) => v !== 1);
+    else if (pos < n) {
+      if (line[pos] !== 1 && go(pos + 1, j)) ok = true;
+      const len = clue[j];
+      if (!ok && pos + len <= n && line.slice(pos, pos + len).every((v) => v !== 2) && (pos + len === n || line[pos + len] !== 1)) ok = go(pos + len + 1, j + 1);
+    }
+    memo.set(key, ok);
+    return ok;
+  };
+  return go(0, 0);
+}
+function lineStatus(p, state) {
+  const status = (line, clue) => {
+    const filled = runs(line.map((v) => (v === 1 ? 1 : 0)));
+    if (filled.length === clue.length && filled.every((v, k) => v === clue[k])) return 2;
+    return feasible(line, clue) ? 0 : 1;
+  };
+  const row = (y) => Array.from(state.subarray(y * p.w, y * p.w + p.w));
+  const col = (x) => Array.from({ length: p.h }, (_, y) => state[y * p.w + x]);
+  return { rows: p.rows.map((c, y) => status(row(y), c)), cols: p.cols.map((c, x) => status(col(x), c)) };
+}
+
+const board = new Board($("board"), $("wrap"));
+window.board = board; // for the browser checks
+let puzzle = null;
+const log = (s) => ($("log").textContent = s);
+
+function load() {
+  puzzle = puzzleOf($("size").value);
+  board.load(puzzle);
+  board.setLineStatus(lineStatus(puzzle, board.state));
+  log(`${puzzle.w}x${puzzle.h}`);
+}
+board.addEventListener("stroke", (e) => {
+  board.setLineStatus(lineStatus(puzzle, board.state));
+  log(`stroke: ${e.detail.changed.length} cell(s)`);
+});
+board.addEventListener("cursor", (e) => log(`cursor: row ${e.detail.r + 1}, column ${e.detail.c + 1}`));
+board.addEventListener("tool", (e) => syncTool(e.detail.tool));
+
+function syncTool(tool) {
+  document.querySelectorAll("[data-tool]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tool === tool)));
+}
+document.querySelectorAll("[data-tool]").forEach((b) => (b.onclick = () => ((board.tool = b.dataset.tool), syncTool(board.tool))));
+$("undo").onclick = () => board.undo();
+$("redo").onclick = () => board.redo();
+$("size").onchange = load;
+$("reload").onclick = load;
+$("solve").onclick = () => {
+  const list = [];
+  puzzle.solution.forEach((v, i) => v && list.push({ i, v: 1 }));
+  board.setCells(list);
+};
+$("reveal").onclick = async () => {
+  log("revealing…");
+  await board.reveal(puzzle.solution, puzzle.thread);
+  log("revealed");
+};
+$("hint").onclick = () => board.highlight({ lines: [{ axis: "row", index: 4 }, { axis: "col", index: 2 }], cells: [{ i: 7, style: "hint" }] });
+$("wrong").onclick = () => board.highlight({ cells: [{ i: 0, style: "wrong" }, { i: puzzle.w + 1, style: "wrong" }] });
+$("theme").onclick = () => {
+  const dark = document.documentElement.dataset.theme !== "dark";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  $("theme").textContent = dark ? "Day" : "Night";
+  document.dispatchEvent(new CustomEvent("hugi:theme", { detail: { theme: document.documentElement.dataset.theme } }));
+};
+if (query.get("theme")) {
+  document.documentElement.dataset.theme = query.get("theme");
+  $("theme").textContent = query.get("theme") === "dark" ? "Day" : "Night";
+}
+load();
+</script>
+</body>
+</html>
