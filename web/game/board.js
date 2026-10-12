@@ -412,7 +412,7 @@ export class Board extends EventTarget {
     if (KEY_STEP[k]) {
       handled();
       this._moveCursor(...KEY_STEP[k], e.shiftKey);
-    } else if (k === " " || k === "enter") {
+    } else if (k === " " || k === "Enter") {
       handled();
       this._keyAct(FILL);
     } else if (k === "x" || k === ".") {

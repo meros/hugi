@@ -204,3 +204,15 @@ test("Board: keyboard cursor, Space fills, a Shift + arrow drag is one undo step
   key("ArrowUp");
   assert.deepEqual(cursors.at(-1), [0, 3], "the cursor stops at the edge");
 });
+
+test("Board: Enter fills at the cursor like Space and toggles back", () => {
+  const { board } = makeBoard();
+  const key = (k) => board._keyDown({ key: k, preventDefault() {} });
+  key("ArrowRight");
+  key("Enter");
+  assert.equal(board.state[1], 1);
+  key("Enter");
+  assert.equal(board.state[1], 0);
+  key(" ");
+  assert.equal(board.state[1], 1);
+});
