@@ -5,6 +5,7 @@
 //! per call on the calling thread; the page races several in separate Web Workers.
 
 use hugi::format;
+use hugi::game;
 use hugi::solver::{self, Puzzle};
 use std::cell::RefCell;
 
@@ -169,5 +170,58 @@ pub extern "C" fn make_unique_step(ptr: *const u8, len: usize, engine: u32) -> u
             put(format!("{{\"unique\":false,\"differ\":{differ},\"flip\":[{r},{c}],\"after\":{after}}}"))
         }
         _ => put(format!("{{\"unique\":false,\"differ\":{differ},\"flip\":null,\"after\":{differ}}}")),
+    }
+}
+
+/// The easiest next move for a board, as one JSON `Move` (see `hugi::game::next_move`). The text
+/// is the clues, a line `state`, then one line per row of '#' filled, '.' marked, '?' unknown.
+#[no_mangle]
+pub extern "C" fn hint(ptr: *const u8, len: usize) -> usize {
+    match input(ptr, len).and_then(game::parse_state) {
+        Ok(((rows, cols), state)) => put(game::next_move(&rows, &cols, &state).json()),
+        Err(e) => error(&e),
+    }
+}
+
+/// For every row and column of a board (same text as `hint`): 0 open, 1 impossible, 2 done, as
+/// `{"rows":[..],"cols":[..]}`.
+#[no_mangle]
+pub extern "C" fn line_status(ptr: *const u8, len: usize) -> usize {
+    match input(ptr, len).and_then(game::parse_state) {
+        Ok(((rows, cols), state)) => put(game::status_json(&rows, &cols, &state)),
+        Err(e) => error(&e),
+    }
+}
+
+/// The rating of a puzzle (any format Hugi reads): the length and cost of its hint path, and its
+/// tier. See `hugi::game::rate`.
+#[no_mangle]
+pub extern "C" fn rate(ptr: *const u8, len: usize) -> usize {
+    match input(ptr, len).and_then(format::parse_clues).and_then(|(rows, cols)| game::rate_json(&rows, &cols, false)) {
+        Ok(json) => put(json),
+        Err(e) => error(&e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn run(f: extern "C" fn(*const u8, usize) -> usize, text: &str) -> String {
+        let n = f(text.as_ptr(), text.len());
+        RESULT.with(|r| String::from_utf8(r.borrow()[..n].to_vec()).unwrap())
+    }
+
+    const BOARD: &str = "rows\n3\n1\ncols\n2\n1\n1\nstate\n#??\n?.?";
+
+    #[test]
+    fn the_exports_answer_in_the_documented_json() {
+        assert_eq!(run(line_status, BOARD), "{\"rows\":[0,0],\"cols\":[0,0,0]}");
+        assert_eq!(run(hint, BOARD), "{\"kind\":\"line\",\"axis\":\"col\",\"index\":0,\"open\":1,\"cells\":[[1,0,1]]}");
+        assert_eq!(
+            run(rate, "rows\n3\n1\ncols\n2\n1\n1\n"),
+            "{\"moves\":4,\"probes\":0,\"max_steps\":0,\"sum_steps\":0,\"search\":false,\"effort\":4,\"tier\":\"tabby\"}"
+        );
+        assert!(run(hint, "rows\n3\ncols\n1\n1\n1\n").starts_with("{\"error\":"));
     }
 }

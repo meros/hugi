@@ -26,5 +26,12 @@ export async function instantiate(module) {
     solve: (text, engine) => call("solve", text, engine),
     // One step of "make unique" on a picture (rows of # and .): see make_unique_step in web/src/lib.rs.
     uniqueStep: (picture, engine) => call("make_unique_step", picture, engine),
+    // The easiest next move for a board: the clues, a line "state", then one line per row of
+    // # filled, . marked, ? unknown. A Move: {kind: "line" | "probe" | "contradiction" | "none" | "solved", ...}.
+    hint: (text) => call("hint", text),
+    // The status of every clue of a board (same text as hint): {rows, cols}, 0 open, 1 impossible, 2 done.
+    lineStatus: (text) => call("line_status", text),
+    // The rating of a puzzle: {moves, probes, max_steps, sum_steps, search, effort, tier}.
+    rate: (text) => call("rate", text),
   };
 }

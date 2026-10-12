@@ -5,12 +5,14 @@
 //!     hugi gen <width> <height> <density%> <seed>
 //!     hugi bench <width> <height> <density%> <count> <seed> [--threads N]
 //!     hugi batch <list-of-files> [--limit-ms N] [--threads N]
+//!     hugi rate <file or ->
 
 // Index loops over parallel per-line arrays read more clearly than iterator chains here.
 #![allow(clippy::needless_range_loop)]
 
 use hugi::cdcl;
 use hugi::format::*;
+use hugi::game;
 use hugi::solver::{self, Outcome, Puzzle};
 use std::time::Instant;
 
@@ -42,6 +44,29 @@ fn num(args: &[String], i: usize, what: &str) -> u64 {
 fn die(msg: &str) -> ! {
     eprintln!("hugi: {msg}");
     std::process::exit(2);
+}
+
+/// The puzzles in the text of `hugi rate`: pictures (rows of '#' and '.') separated by blank
+/// lines, or else one clue file.
+fn rate_inputs(text: &str) -> Result<Vec<Clues>, String> {
+    let is_picture = |l: &str| l.chars().all(|c| c == '#' || c == '.');
+    if !text.lines().map(str::trim).filter(|l| !l.is_empty()).all(is_picture) {
+        return Ok(vec![parse_clues(text)?]);
+    }
+    let mut out = Vec::new();
+    for block in text.split("\n\n").map(str::trim).filter(|b| !b.is_empty()) {
+        let pic: Vec<Vec<bool>> = block.lines().map(|l| l.trim().chars().map(|c| c == '#').collect()).collect();
+        if pic.iter().any(|r| r.len() != pic[0].len()) {
+            return Err(format!(
+                "the picture starting {:?} has rows of different lengths",
+                block.lines().next().unwrap()
+            ));
+        }
+        let rows = pic.iter().map(|r| runs(r.iter().copied())).collect();
+        let cols = (0..pic[0].len()).map(|c| runs(pic.iter().map(|r| r[c]))).collect();
+        out.push(check_clues(rows, cols)?);
+    }
+    Ok(out)
 }
 
 fn main() {
@@ -78,6 +103,18 @@ fn main() {
                 solver::quiesce(); // not timed: the next puzzle starts on idle cores
             }
             println!("# solved {solved}/{} par2 {:.1} ms geomean {:.4} ms", files.len(), par2, (log_sum / files.len() as f64).exp());
+        }
+        Some("rate") => {
+            // The hint-path rating and tier of each puzzle, one JSON line each (docs/game-design.md §2d).
+            let path = args.get(1).unwrap_or_else(|| die("rate needs a puzzle file, or - for standard input"));
+            let text = if path == "-" {
+                std::io::read_to_string(std::io::stdin()).unwrap_or_else(|e| die(&format!("stdin: {e}")))
+            } else {
+                std::fs::read_to_string(path).unwrap_or_else(|e| die(&format!("{path}: {e}")))
+            };
+            for (rows, cols) in rate_inputs(&text).unwrap_or_else(|e| die(&e)) {
+                println!("{}", game::rate_json(&rows, &cols, true).unwrap_or_else(|e| die(&e)));
+            }
         }
         Some("cnf") => {
             // The puzzle as CNF (DIMACS) for an external SAT solver: the
