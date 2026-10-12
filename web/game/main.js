@@ -9,8 +9,12 @@
 //   #make, #WxH:bits              make    (the Maker; every old share link keeps working)
 
 import { loadSolver } from "../wasm.js?v=dev";
+import { loadPack } from "./pack.js?v=dev";
+import { loadSave } from "./save.js?v=dev";
+import { Engine } from "./engine.js?v=dev";
 
-// Filled during boot. The screens' modules add the rest (pack, save, engine).
+// Filled during boot, before the screens' modules are loaded: the pack, the save, the compiled solver
+// (loadSolver) and the engine (one worker for hints, ratings and uniqueness).
 export const ctx = { pack: null, save: null, solver: null, engine: null };
 
 const screens = new Map(); // view -> {show(params), hide()}
@@ -106,8 +110,7 @@ export function toast(message, ms = 2600) {
 }
 
 // Modules of the screens, loaded in boot(). Each calls registerScreen() when it is evaluated.
-// WP7a and WP7b add their lines here, for example "./quilt.js?v=dev" and "./play.js?v=dev".
-const SCREEN_MODULES = [];
+const SCREEN_MODULES = ["./quilt.js?v=dev", "./play.js?v=dev"];
 
 export const ready = (async () => {
   window.addEventListener("hashchange", route);
@@ -117,5 +120,13 @@ export const ready = (async () => {
   } catch (e) {
     console.error("The solver did not load:", e);
   }
-  await Promise.all(SCREEN_MODULES.map((m) => import(m)));
+  try {
+    ctx.pack = await loadPack();
+  } catch (e) {
+    console.error("The puzzle pack did not load:", e);
+  }
+  ctx.save = loadSave();
+  if (ctx.solver) ctx.engine = new Engine(ctx.solver.module);
+  // A screen that fails to load must not take the others (or the Maker) down.
+  await Promise.all(SCREEN_MODULES.map((m) => import(m).catch((e) => console.error(`${m} did not load:`, e))));
 })();
