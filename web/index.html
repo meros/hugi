@@ -10,10 +10,10 @@
 <style>
   /* Day: parchment, linen and natural dyes (woad, madder, weld, moss). Night: the hall after dark. */
   :root {
-    --bg: #e6dabd; --panel: #f6efdc; --ink: #2a2118; --muted: #6e604c;
+    --bg: #e6dabd; --panel: #f6efdc; --ink: #2a2118; --muted: #5a4d3a;
     --line: #d2c5a4; --heavy: #7a6848; --glow: rgba(255, 255, 255, .28); --stitch: #2e4a73; --madder: #a63d2a;
     --madder-fill: rgba(166, 61, 42, .22); --hint-fill: rgba(46, 74, 115, .14);
-    --good: #3f6b3a; --warn: #a96a10; --bad: #9c2b23; --shadow: rgba(60, 40, 10, .18);
+    --good: #376232; --warn: #855008; --bad: #9c2b23; --shadow: rgba(60, 40, 10, .18);
     --t1: #2e4a73; --t2: #a63d2a; --t3: #c48a12; --t4: #4f6b34; --t5: #2a2118;
     --serif: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", P052, Georgia, serif;
   }
@@ -39,9 +39,11 @@
          background-image: radial-gradient(ellipse at 20% 0%, var(--glow), transparent 60%); }
   .view { display: none; }
   body[data-view="make"] #view-make, body[data-view="play"] #view-play, body[data-view="puzzle"] #view-puzzle { display: block; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; padding: 1rem 1.2rem .5rem; }
-  header h1 { font-size: 1.6rem; margin: 0; font-weight: 700; letter-spacing: .01em; }
-  header .links { margin-left: auto; font-size: .9rem; display: flex; gap: .9rem; align-items: center; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .7rem; padding: .6rem .75rem .3rem; }
+  header h1 { font-size: 1.4rem; margin: 0; font-weight: 700; letter-spacing: .01em; }
+  header .links { margin-left: auto; font-size: .9rem; display: flex; gap: .7rem; align-items: center; }
+  header .links .gh-header { display: none; }
+  footer { padding: .5rem 1.2rem 1.5rem; font-size: .9rem; }
   a { color: var(--madder); }
   input, select, button { font: inherit; font-size: .92rem; color: var(--ink); background: var(--panel);
                           border: 2px dashed var(--heavy); border-radius: 8px; padding: .22rem .6rem; }
@@ -51,6 +53,7 @@
   button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-visible { outline: 3px solid var(--stitch); outline-offset: 2px; }
   .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .3rem 1.2rem .9rem; }
   .bar label { color: var(--muted); }
+  input[type=file] { width: 100%; min-width: 0; }
   .threads { display: inline-flex; gap: .3rem; align-items: center; margin-left: .4rem; color: var(--muted); }
   .threads button { width: 1.5rem; height: 1.5rem; border-radius: 50%; padding: 0; border: 2px solid var(--panel); box-shadow: 0 0 0 2px var(--heavy); }
   .threads button[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
@@ -82,6 +85,26 @@
   .img-row input[type=range] { width: 8rem; vertical-align: middle; }
   #img-preview { border: 1px solid var(--line); background: #fff; max-width: 100%; image-rendering: pixelated; }
   dialog textarea { height: 7rem; }
+  /* Wider screens: the header has room for the link, and the footer does not repeat it. */
+  @media (min-width: 600px) {
+    header { align-items: baseline; padding: 1rem 1.2rem .5rem; gap: .3rem 1rem; }
+    header h1 { font-size: 1.6rem; }
+    header .links .gh-header { display: inline-flex; }
+    footer .gh-footer { display: none; }
+  }
+  /* Touch: every control has a 44 px hit area. The desktop look stays. */
+  @media (pointer: coarse), (max-width: 600px) {
+    button, select, input:not([type=checkbox]):not([type=range]), .links a, footer a { min-height: 44px; }
+    button { min-width: 44px; padding: .3rem .9rem; }
+    .links a, footer a { display: inline-flex; align-items: center; padding: 0 .3rem; }
+    .threads { gap: .3rem; margin-left: 0; }
+    .threads button { width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 50%; background-clip: content-box;
+                      box-shadow: inset 0 0 0 1.5px var(--line); }
+    .threads button[aria-pressed="true"] { box-shadow: inset 0 0 0 3px var(--ink); }
+    .img-row label { min-height: 44px; display: inline-flex; align-items: center; gap: .4rem; }
+    .img-row input[type=range] { min-height: 44px; }
+    input[type=checkbox] { width: 1.4rem; height: 1.4rem; }
+  }
   body.dragging::after { content: "Drop the file to import it"; position: fixed; inset: 0; display: grid; place-items: center;
     font-size: 1.6rem; background: rgba(20, 15, 5, .55); color: #fff; pointer-events: none; }
 </style>
@@ -96,7 +119,7 @@
   <span class="links">
     <span id="skeins" class="skeins"></span>
     <button id="theme" aria-label="Switch between day and night">Night</button>
-    <a href="https://github.com/meros/hugi">the solver, on GitHub</a>
+    <a class="gh-header" href="https://github.com/meros/hugi">the solver, on GitHub</a>
   </span>
 </header>
 <div id="view-make" class="view">
@@ -136,6 +159,7 @@
 </div>
 <div id="view-play" class="view"></div>
 <div id="view-puzzle" class="view"></div>
+<footer><a class="gh-footer" href="https://github.com/meros/hugi">the solver, on GitHub</a></footer>
 <div id="toasts" class="toasts" role="status"></div>
 <dialog id="import-dialog">
   <form method="dialog" onsubmit="return false">

@@ -2,12 +2,11 @@
    variables in index.html, so day, night and the system setting all work. */
 
 /* Header */
-header nav { display: flex; gap: .3rem; align-items: baseline; }
-header nav a { color: var(--ink); text-decoration: none; padding: .1rem .7rem; border-radius: 8px; border: 2px dashed transparent; font-size: 1rem; }
+header nav { display: flex; gap: .1rem; align-items: center; }
+header nav a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 .7rem; border-radius: 8px; border: 2px dashed transparent; font-size: 1rem; }
 header nav a:hover { border-color: var(--heavy); }
 header nav a[aria-current="page"] { border: 2px solid var(--heavy); background: var(--panel); font-weight: 700; }
 header nav a:focus-visible { outline: 3px solid var(--stitch); outline-offset: 2px; }
-header .links { align-items: baseline; }
 
 .skeins { display: inline-flex; align-items: center; gap: .35rem; font-variant-numeric: tabular-nums; color: var(--ink); }
 .skeins:empty, body[data-view="make"] .skeins { display: none; }
