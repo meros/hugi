@@ -23,9 +23,13 @@ export function buildPack(json) {
   return { version: json.version, credits: json.credits, tiers: json.tiers, puzzles, daily, byId };
 }
 
+// `?pack=<path>` in the page URL loads another pack (a small fixture for the e2e tests and for
+// screen work); the default is the shipped pack.json.
 export async function loadPack() {
-  const res = await fetch("pack.json?v=dev");
-  if (!res.ok) throw new Error(`pack.json: ${res.status}`);
+  const override = typeof location === "undefined" ? null : new URLSearchParams(location.search).get("pack");
+  const url = override && /^[\w./-]+\.json$/.test(override) && !override.includes("..") ? override : "pack.json?v=dev";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url}: ${res.status}`);
   return buildPack(await res.json());
 }
 
