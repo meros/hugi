@@ -1,0 +1,13 @@
+{
+  "name": "hugi-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser tests of the Hugi web app. Pinned to the Playwright version of nixpkgs so the nix-store browsers work.",
+  "scripts": {
+    "test": "playwright test",
+    "test:phone": "playwright test --project=phone"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
