@@ -1,0 +1,100 @@
+/* The Play screen: the daily card, the quilt and its dialogs. Phone first (360 px, and 320 px without a sideways
+   scroll); wider screens are added with min-width queries. Colours come from the variables in index.html, plus
+   --q-star, the star colour: --t3 is under 3:1 on the linen by day, so day takes a darker weld. */
+
+:root { --q-star: #7d5600; }
+:root[data-theme="dark"] { --q-star: #e8b94a; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --q-star: #e8b94a; }
+}
+
+#view-play { padding: .3rem 1rem 1.5rem; }
+.q-page { max-width: 64rem; margin: 0 auto; }
+
+/* Daily card and the two buttons */
+.q-top { display: grid; gap: .8rem; }
+.q-daily { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem 1rem; }
+.q-daily h2 { flex-basis: 100%; margin: 0; }
+.q-daily p { margin: 0; }
+.q-daily-info { min-width: 0; }
+.q-meta { font-weight: 700; }
+.q-play { min-width: 6rem; }
+.q-daily-row { display: flex; align-items: center; gap: .9rem; flex-basis: 100%; }
+.q-thumb { flex: none; width: 72px; aspect-ratio: 1; border: 2px solid var(--heavy); border-radius: 8px; padding: 3px; background: var(--bg); }
+.q-thumb canvas { display: block; width: 100%; height: 100%; }
+.q-solved { font-size: 1.15rem; font-weight: 700; color: var(--good); }
+.q-lock { color: var(--ink); }
+.q-tools { display: flex; gap: .5rem; }
+.q-tools button { flex: 1 1 0; min-width: 0; line-height: 1.25; }
+.q-tools .muted { display: block; font-size: .82rem; }
+
+.q-prompt { margin: .9rem 0 0; padding: .1rem 0 .1rem .8rem; border-left: 4px solid var(--stitch); }
+.q-note { margin: .8rem 0 0; padding: .4rem .7rem; border: 2px dashed var(--heavy); border-radius: 8px; background: var(--panel); }
+
+/* Tiers */
+.q-tier { margin-top: 1.5rem; }
+.q-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
+.q-head h2 { margin: 0; font-size: 1.3rem; }
+.q-count { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.q-blurb { margin: .1rem 0 0; }
+.q-tier > .q-lock, .q-done { margin: .3rem 0 0; }
+.q-done { color: var(--good); font-style: italic; }
+
+.quilt { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+.quilt.shelf { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+.quilt li { display: flex; min-width: 0; }
+.locked .quilt { opacity: .45; }
+.done .quilt { border: 3px double var(--heavy); border-radius: 10px; padding: 6px; background: var(--bg); }
+
+/* Patches: blank linen, a started board, a solved picture */
+.patch { position: relative; display: flex; flex-direction: column; align-items: stretch; width: 100%; min-width: 0; padding: 3px; gap: 2px;
+  border: 2px dashed var(--heavy); border-radius: 8px; background: var(--panel); color: var(--ink); text-align: center; }
+.patch .art { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; aspect-ratio: 1; }
+.patch canvas { display: block; width: 100%; height: 100%; }
+.patch .num { font-size: 1.15rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.patch .sz { font-size: .72rem; color: var(--muted); line-height: 1.2; }
+.patch .under { display: flex; flex-direction: column; align-items: center; min-height: 1.1rem; font-size: .72rem; line-height: 1.1rem; color: var(--stitch); }
+.patch.started { border-color: var(--stitch); }
+.patch.started::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--stitch); }
+.patch.solved { border-style: solid; }
+.patch.solved:hover { border-style: solid; }
+.q-stars { margin: 0; color: var(--q-star); font-size: .85rem; letter-spacing: .05em; line-height: 1.1rem; }
+.q-title { display: block; max-width: 100%; margin-top: 1px; font-size: .8rem; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere; }
+.q-from { display: block; max-width: 100%; font-size: .72rem; line-height: 1.2; overflow-wrap: anywhere; }
+.shelf .patch { height: 100%; }
+
+.patch.fresh { animation: q-stitch 1.4s ease-out 1; }
+@keyframes q-stitch { from { box-shadow: 0 0 0 0 var(--stitch); } to { box-shadow: 0 0 0 12px transparent; } }
+
+.q-credits { margin: 1.8rem 0 0; font-size: .85rem; }
+
+/* Dialogs */
+.q-dialog { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+.q-dialog h3 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.q-dialog .actions button { min-width: 44px; }
+.q-ach { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .5rem; }
+.q-ach li { display: flex; gap: .7rem; align-items: flex-start; padding: .45rem .6rem; border: 2px dashed var(--heavy); border-radius: 8px; }
+.q-ach li.earned { border-style: solid; background: var(--bg); }
+.q-ach-mark { flex: none; width: 1.4rem; text-align: center; font-weight: 700; color: var(--q-star); }
+.q-ach-body { display: flex; flex-direction: column; min-width: 0; }
+.q-facts { list-style: none; margin: .4rem 0 .6rem; padding: 0; }
+.q-facts li { display: flex; justify-content: space-between; gap: 1rem; padding: .3rem 0; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.q-field { display: block; margin: .6rem 0; color: var(--muted); }
+.q-field input, .q-field textarea { display: block; margin-top: .25rem; color: var(--ink); }
+.q-field input[type=file] { width: 100%; }
+.q-dialog .q-note { margin: .4rem 0; }
+button.danger { border-style: solid; border-color: var(--bad); color: var(--bad); font-weight: 700; }
+button.danger:hover { background: var(--line); }
+
+/* Wider screens */
+@media (min-width: 720px) {
+  #view-play { padding: .5rem 1.2rem 2rem; }
+  .q-top { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .q-tools { flex-direction: column; }
+  .q-tools button { flex: none; }
+  .q-tier { margin-top: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patch.fresh { animation: none; }
+}
