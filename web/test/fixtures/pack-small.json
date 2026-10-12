@@ -1,0 +1,167 @@
+{
+ "version": 1,
+ "credits": "Fixture pack for tests.",
+ "tiers": [
+  {
+   "id": "tabby",
+   "name": "Tabby",
+   "blurb": "Small pictures.",
+   "opens": 0
+  },
+  {
+   "id": "twill",
+   "name": "Twill",
+   "blurb": "Larger pictures.",
+   "opens": 2
+  }
+ ],
+ "puzzles": [
+  {
+   "id": "cup-5",
+   "name": "Cup",
+   "w": 5,
+   "h": 5,
+   "bits": "P0YHAA",
+   "thread": 2,
+   "tier": "tabby",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   },
+   "note": "Each number is a run of filled cells, in order."
+  },
+  {
+   "id": "heart-5",
+   "name": "Heart",
+   "w": 5,
+   "h": 5,
+   "bits": "6n9HAA",
+   "thread": 2,
+   "tier": "tabby",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  },
+  {
+   "id": "tree-5",
+   "name": "Tree",
+   "w": 5,
+   "h": 5,
+   "bits": "xH1CAA",
+   "thread": 4,
+   "tier": "tabby",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  },
+  {
+   "id": "boat-6",
+   "name": "Boat",
+   "w": 6,
+   "h": 4,
+   "bits": "hPN7",
+   "thread": 1,
+   "tier": "twill",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  },
+  {
+   "id": "moon-6",
+   "name": "Moon",
+   "w": 6,
+   "h": 4,
+   "bits": "zjA4",
+   "thread": 3,
+   "tier": "twill",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  },
+  {
+   "id": "key-6",
+   "name": "Key",
+   "w": 6,
+   "h": 4,
+   "bits": "Q78C",
+   "thread": 5,
+   "tier": "twill",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  }
+ ],
+ "daily": [
+  {
+   "id": "d-a-5",
+   "name": "Cross",
+   "w": 5,
+   "h": 5,
+   "bits": "UREVAQ",
+   "thread": 1,
+   "tier": "twill",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  },
+  {
+   "id": "d-b-5",
+   "name": "Frame",
+   "w": 5,
+   "h": 5,
+   "bits": "P9b4AQ",
+   "thread": 5,
+   "tier": "twill",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  },
+  {
+   "id": "d-c-5",
+   "name": "Plus",
+   "w": 5,
+   "h": 5,
+   "bits": "hHxCAA",
+   "thread": 3,
+   "tier": "twill",
+   "rating": {
+    "moves": 9,
+    "probes": 0,
+    "max_steps": 0,
+    "sum_steps": 0,
+    "effort": 9
+   }
+  }
+ ]
+}
