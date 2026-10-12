@@ -74,7 +74,5 @@ export function nextPuzzle(pack, save, afterId) {
   return null;
 }
 
-// A puzzle shared from the Maker (§5b). WP9 replaces this with shared.js.
-export function sharedPuzzle() {
-  return null;
-}
+// A puzzle shared from the Maker (§5b) lives in shared.js; pack.js keeps the export for its callers.
+export { sharedPuzzle } from "./shared.js?v=dev";

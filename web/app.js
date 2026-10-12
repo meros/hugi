@@ -5,6 +5,7 @@
 import { loadSolver } from "./wasm.js?v=dev";
 import { cluesOf, cluesText, packBits, unpackBits } from "./grid.js?v=dev";
 import { css, tile } from "./draw.js?v=dev";
+import { solveLink } from "./game/shared.js?v=dev";
 
 const $ = (id) => document.getElementById(id);
 // The page shows one view at a time (body.dataset.view, set by game/main.js). The Maker writes the
@@ -733,16 +734,85 @@ function restore(h) {
   H = hh;
   return true;
 }
-async function copy(text, button, label) {
+async function copy(text, button, label, out = null) {
+  if (out) {
+    $("share-out").value = text;
+    $("share-out-row").hidden = false;
+  }
   try {
     await navigator.clipboard.writeText(text);
     button.textContent = "Copied";
   } catch {
-    window.prompt("Copy this:", text);
+    if (out) {
+      // No clipboard (an insecure page, a refused permission): the link is in the box, selected.
+      $("share-out").select();
+      button.textContent = "Select and copy";
+    } else window.prompt("Copy this:", text);
   }
   setTimeout(() => (button.textContent = label), 1200);
 }
-$("share").onclick = () => copy(location.origin + location.pathname + hash(), $("share"), "Copy link");
+
+// The Share… dialog (docs/game-design.md 5b). A link to solve needs a unique picture.
+const shareDialog = $("share-dialog");
+const base = () => location.origin + location.pathname;
+const editLink = () => base() + hash();
+const solveHash = () => solveLink({ w: W, h: H, cells: pic, title: $("share-title").value, author: $("share-author").value });
+const SHARE_STATE = {
+  good: ["good", "Unique solution: one picture fits every clue, so it works as a puzzle."],
+  warn: ["warn", "This picture has more than one solution. Use Make unique first, or share it to edit."],
+  busy: ["busy", "Hugi is still checking this picture. Try again in a moment."],
+  bad: ["bad", "The solver found no solution for this picture. Share it to edit instead."],
+  idle: ["busy", "Draw a picture first."],
+};
+function shareState() {
+  const kind = ["good", "warn", "busy", "bad"].find((k) => $("verdict").classList.contains(k)) || "idle";
+  const [cls, text] = SHARE_STATE[kind];
+  const st = $("share-state");
+  st.className = "state " + cls;
+  st.textContent = text;
+  $("share-solve-link").disabled = kind !== "good";
+  $("share-try").disabled = kind !== "good";
+  $("share-make-unique-row").hidden = kind !== "warn";
+  $("share-edit-link").disabled = !pic.some(Boolean);
+}
+let titledFor = ""; // the picture the title field belongs to
+$("share").onclick = () => {
+  if (titledFor !== hash()) $("share-title").value = ""; // a new picture starts untitled
+  titledFor = hash();
+  try {
+    $("share-author").value = localStorage.getItem("hugi-author") || "";
+  } catch {}
+  $("share-out-row").hidden = true;
+  shareState();
+  shareDialog.showModal();
+  // Focus the main action, or the way to fix the picture. Not a text field: on a phone that opens the keyboard.
+  const first = [$("share-solve-link"), $("share-make-unique"), $("share-edit-link"), $("share-close")].find((b) => b.offsetParent && !b.disabled);
+  first?.focus();
+};
+function rememberAuthor() {
+  try {
+    localStorage.setItem("hugi-author", $("share-author").value.trim());
+  } catch {}
+}
+$("share-solve-link").onclick = () => {
+  rememberAuthor();
+  copy(base() + solveHash(), $("share-solve-link"), "Link to solve", true);
+};
+$("share-edit-link").onclick = () => copy(editLink(), $("share-edit-link"), "Link to edit", true);
+$("share-try").onclick = () => {
+  rememberAuthor();
+  const h = solveHash();
+  shareDialog.close();
+  location.hash = h;
+};
+$("share-make-unique").onclick = () => {
+  shareDialog.close();
+  makeUnique();
+};
+$("share-close").onclick = () => shareDialog.close();
+shareDialog.addEventListener("click", (e) => e.target === shareDialog && shareDialog.close()); // the backdrop
+shareDialog.addEventListener("close", () => $("share").focus({ preventScroll: true }));
+document.addEventListener("hugi:route", () => shareDialog.open && shareDialog.close());
 
 $("copy-clues").onclick = () => copy(puzzleText(), $("copy-clues"), "Copy clues");
 function download(name, blob) {

@@ -102,8 +102,9 @@ test("nextPuzzle: skips locked tiers, wraps round, null when none", () => {
   assert.equal(nextPuzzle(pack, s, "key-6"), null);
 });
 
-test("sharedPuzzle is a stub until WP9", () => {
+test("sharedPuzzle delegates to shared.js", () => {
   assert.equal(sharedPuzzle("#solve:5x5:AAAA", { unique: true }), null);
+  assert.equal(sharedPuzzle("#solve:5x5:AAAAAA", { unique: true }).kind, "shared");
 });
 
 test("loadPack fetches pack.json and builds the pack", async () => {

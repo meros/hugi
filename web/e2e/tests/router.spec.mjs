@@ -89,5 +89,4 @@ test.describe("router", () => {
 
   // Needs the screens of WP7.
   test.fixme("#play/<id> opens a puzzle and #daily opens today's puzzle (WP7b: play.js not merged)", async () => {});
-  test.fixme("#solve:WxH:bits opens the shared puzzle with clues only (WP9: shared.js not merged)", async () => {});
 });

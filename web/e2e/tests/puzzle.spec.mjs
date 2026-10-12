@@ -119,10 +119,18 @@ test.describe("puzzle screen", () => {
     await expect(page.locator(".pz-card")).toContainText("Opens when you solve 2 Tabby puzzles (0 so far).");
     await page.goto(`/index.html?pack=${PACK}#play/nope-9`);
     await expect(page.getByRole("heading", { name: "There is no such puzzle" })).toBeVisible();
-    await page.goto(`/index.html?pack=${PACK}#solve:5x5:xH1HAA`);
+    await page.goto(`/index.html?pack=${PACK}#solve:5x5:xH1`); // cut off
     await expect(page.getByRole("heading", { name: "This link does not hold a puzzle" })).toBeVisible();
     await page.locator(".pz-card").getByRole("button", { name: "Play" }).click();
     await expect(page.locator("body")).toHaveAttribute("data-view", "play");
+  });
+
+  test("a solve link opens a real shared puzzle: clues, no picture", async ({ page }) => {
+    await page.goto(`/index.html?pack=${PACK}#solve:5x5:xH1HAA&t=Plus&a=Ann`);
+    await expect(page.locator(".pz-title")).toContainText("Plus · 5×5");
+    await expect(page.locator(".pz-note")).toContainText("From Ann.");
+    await expect(page.locator(".pz-canvas")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "This link does not hold a puzzle" })).toBeHidden();
   });
 
   test("a tap fills a cell, a second tap clears it, Mark puts a dot", async ({ page }, testInfo) => {

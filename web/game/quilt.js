@@ -4,6 +4,7 @@
 import { registerScreen, go, ctx, setSkeins, toast } from "./main.js?v=dev";
 import { css, tile } from "../draw.js?v=dev";
 import { unpackBits } from "../grid.js?v=dev";
+import { threadOf } from "./shared.js?v=dev";
 import { tierState, dailyFor, dailyOpen } from "./pack.js?v=dev";
 import { ACHIEVEMENTS, DAILY_OPENS_AFTER, activeStreak, today } from "./rules.js?v=dev";
 import { saveStatus } from "./save.js?v=dev";
@@ -225,7 +226,7 @@ function shelf(save) {
     const from = s.author ? `from ${s.author}` : "";
     const solved = s.stars > 0;
     // A shared puzzle carries no thread colour: the id picks a steady one.
-    const art = solved ? pictureCanvas(s.w, s.h, unpackBits(s.w, s.h, s.bits), 1 + (id.charCodeAt(2) % 5)) : [el("span", { className: "sz" }, `${s.w}×${s.h}`)];
+    const art = solved ? pictureCanvas(s.w, s.h, unpackBits(s.w, s.h, s.bits), threadOf(id)) : [el("span", { className: "sz" }, `${s.w}×${s.h}`)];
     grid.append(
       patch({
         hash: sharedHash(s),

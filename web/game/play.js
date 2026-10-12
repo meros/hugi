@@ -660,7 +660,7 @@ function showWin(c, res, seconds) {
   const row = (ok, yes, no) => el("li", { className: ok ? "yes" : "no", textContent: (ok ? "✓ " : "– ") + (ok ? yes : no) });
   why.replaceChildren(row(true, "Solved", ""), row(!c.helped, "No help", "Help used"), row(seconds <= c.par, `Within par (${clock(c.par)})`, `Over par (${clock(c.par)})`));
   w.querySelector(".pz-win-skeins").textContent =
-    res.earned > 0 ? `+${plural(res.earned, "skein", "skeins")}` : puzzle.kind === "shared" ? "No skeins for a shared puzzle." : "No new skeins this time.";
+    res.earned > 0 ? `+${plural(res.earned, "skein", "skeins")}` : puzzle.kind === "shared" ? "0 skeins earned: a shared puzzle pays none." : "No new skeins this time.";
   const more = [];
   if (res.bonus) more.push(`+${res.bonus} for ${plural(res.newAch.length, "achievement", "achievements")}`);
   if (puzzle.kind === "daily") more.push(`Daily streak: ${plural(ctx.save.daily.streak, "day", "days")}`);

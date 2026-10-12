@@ -135,14 +135,16 @@ test.describe("Maker", () => {
     await other.close();
   });
 
-  test("Copy link puts the share link on the clipboard", async ({ page, context, browserName }) => {
+  test("Share… opens a dialog; Link to edit puts today's #WxH:bits link on the clipboard", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await openMaker(page, HEART_HASH);
     await page.locator("#share").click();
-    await expect(page.locator("#share")).toHaveText("Copied");
+    await expect(page.getByRole("dialog", { name: "Share this picture" })).toBeVisible();
+    await page.locator("#share-edit-link").click();
+    await expect(page.locator("#share-edit-link")).toHaveText("Copied");
     const text = await page.evaluate(() => navigator.clipboard.readText());
     expect(text).toBe(new URL("/index.html" + HEART_HASH, page.url()).href);
-    await expect(page.locator("#share")).toHaveText("Copy link"); // the label comes back
+    await expect(page.locator("#share-edit-link")).toHaveText("Link to edit"); // the label comes back
   });
 
   test("the Maker's picture comes back after a reload without a hash", async ({ page }) => {

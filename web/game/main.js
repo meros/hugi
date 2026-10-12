@@ -39,7 +39,7 @@ export function parse(hash) {
   let m = /^#play\/([^/]+)$/.exec(h);
   if (m) return { view: "puzzle", params: { kind: "pack", id: decodeURIComponent(m[1]) } };
   if (h === "#daily") return { view: "puzzle", params: { kind: "daily" } };
-  if (/^#solve:\d+x\d+:[\w-]*(&.*)?$/.test(h)) return { view: "puzzle", params: { kind: "shared", hash: h } };
+  if (h.startsWith("#solve:")) return { view: "puzzle", params: { kind: "shared", hash: h } };
   if (h === "#make" || /^#\d+x\d+:[\w-]*$/.test(h)) return { view: "make", params: {} };
   return { view: "play", params: {} };
 }

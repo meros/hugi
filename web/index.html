@@ -85,6 +85,24 @@
   .img-row input[type=range] { width: 8rem; vertical-align: middle; }
   #img-preview { border: 1px solid var(--line); background: #fff; max-width: 100%; image-rendering: pixelated; }
   dialog textarea { height: 7rem; }
+  /* The Share… dialog */
+  #share-dialog [hidden] { display: none !important; }
+  #share-dialog h2 { font-size: 1.25rem; margin: 0 0 .5rem; }
+  #share-dialog form { display: grid; gap: .6rem; }
+  #share-dialog .note { margin: 0; }
+  #share-dialog label { display: grid; gap: .2rem; color: var(--muted); }
+  #share-dialog input[type=text] { width: 100%; color: var(--ink); }
+  #share-dialog .fields { display: grid; gap: .6rem; }
+  #share-dialog .state { margin: 0; font-weight: 700; }
+  #share-dialog .state.good { color: var(--good); } #share-dialog .state.warn { color: var(--warn); }
+  #share-dialog .state.bad { color: var(--bad); } #share-dialog .state.busy { color: var(--muted); }
+  #share-dialog .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+  #share-dialog .actions button.primary { background: var(--stitch); color: var(--panel); border: 2px solid var(--stitch); font-weight: 700; }
+  #share-dialog .actions button.primary:hover { background: var(--stitch); filter: brightness(1.1); }
+  #share-dialog .actions button:disabled { opacity: .55; cursor: not-allowed; }
+  #share-dialog .out { font: 12px/1.3 ui-monospace, monospace; }
+  #share-dialog .close { justify-self: end; }
+  @media (max-width: 600px) { #share-dialog .actions button { flex: 1 1 100%; } }
   /* Wider screens: the header has room for the link, and the footer does not repeat it. */
   @media (min-width: 600px) {
     header { align-items: baseline; padding: 1rem 1.2rem .5rem; gap: .3rem 1rem; }
@@ -134,7 +152,7 @@
   <button id="random">Random</button>
   <button id="clear">Clear</button>
   <button id="import">Import…</button>
-  <button id="share">Copy link</button>
+  <button id="share" aria-haspopup="dialog">Share…</button>
   <button id="copy-clues">Copy clues</button>
   <button id="download">Download .txt</button>
   <button id="png">Save PNG</button>
@@ -185,6 +203,25 @@
     </div>
     <div id="import-error"></div>
     <p><button id="import-go">Import</button> <button id="import-cancel">Cancel</button></p>
+  </form>
+</dialog>
+<dialog id="share-dialog" aria-labelledby="share-heading">
+  <form method="dialog" onsubmit="return false">
+    <h2 id="share-heading">Share this picture</h2>
+    <div class="fields">
+      <label>Title (optional) <input id="share-title" type="text" maxlength="40" autocomplete="off" enterkeyhint="done"></label>
+      <label>Your name (optional) <input id="share-author" type="text" maxlength="40" autocomplete="name" enterkeyhint="done"></label>
+    </div>
+    <p id="share-state" class="state" role="status"></p>
+    <p id="share-make-unique-row" hidden><button id="share-make-unique" type="button">Make unique</button></p>
+    <div class="actions">
+      <button id="share-solve-link" type="button" class="primary">Link to solve</button>
+      <button id="share-edit-link" type="button">Link to edit</button>
+      <button id="share-try" type="button">Solve it yourself</button>
+    </div>
+    <p class="note" id="share-hint">A link to solve opens in Play with the clues only. A link to edit opens the Maker with this picture.</p>
+    <label id="share-out-row" hidden>Last link copied <input id="share-out" class="out" type="text" readonly></label>
+    <button id="share-close" type="button" class="close">Close</button>
   </form>
 </dialog>
 <script type="module" src="app.js?v=dev"></script>
