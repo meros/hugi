@@ -88,11 +88,11 @@ test("applyStroke: axis lock in a full drag, start empty, mark and filled cells 
   assert.deepEqual(after(s, applyStroke(s, path, 1)).slice(5, 10), [1, 1, 2, 1, 1]);
 });
 
-test("boardLayout: the cell fits the frame, 30 at most, never below the minimum", () => {
+test("boardLayout: the cell fits the frame, 56 at most, never below the minimum", () => {
   const rows = [[1], [2, 2]];
   const cols = [[1], [3]];
   const wide = boardLayout(rows, cols, 2, 2, 2000, 12);
-  assert.equal(wide.cell, 30);
+  assert.equal(wide.cell, 56);
   const g15 = boardLayout(Array(15).fill([3, 3]), Array(15).fill([3, 3]), 15, 15, 400, 12);
   assert.ok(g15.width <= 400, `width ${g15.width}`);
   assert.ok(g15.cell >= 12);

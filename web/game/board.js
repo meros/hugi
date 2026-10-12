@@ -13,7 +13,7 @@ import { css, tile, dot } from "../draw.js?v=dev";
 const FILL = 1;
 const MARK = 2;
 const MAX_UNDO = 500;
-const MAX_CELL = 30;
+const MAX_CELL = 56;
 const MIN_CELL = { pointer: 12, touch: 14 };
 
 /** @typedef {{i: number, from: number, to: number}} Change */
