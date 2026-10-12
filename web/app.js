@@ -2,10 +2,14 @@
 // puzzle has one solution. The solver is the Rust code from this repository, compiled to
 // WebAssembly; each edit starts three engines in Web Workers and the first answer wins.
 
-import { instantiate } from "./hugi.js?v=dev";
+import { loadSolver } from "./wasm.js?v=dev";
+import { cluesOf, cluesText, packBits, unpackBits } from "./grid.js?v=dev";
+import { css, tile } from "./draw.js?v=dev";
 
 const $ = (id) => document.getElementById(id);
-const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// The page shows one view at a time (body.dataset.view, set by game/main.js). The Maker writes the
+// hash, reads dropped files and starts the solver only while its own view is shown.
+const inMaker = () => document.body.dataset.view === "make";
 
 const MAX = 100;
 let W = 15;
@@ -91,7 +95,7 @@ function resetFix() {
   lastFix = null;
 }
 
-function loadPicture(text) {
+function loadPicture(text, notify = true) {
   resetFix();
   const lines = text.trim().split("\n");
   W = lines[0].length;
@@ -99,37 +103,13 @@ function loadPicture(text) {
   pic = new Uint8Array(W * H);
   lines.forEach((l, y) => [...l].forEach((ch, x) => (pic[y * W + x] = ch === "#" ? 1 : 0)));
   syncInputs();
-  changed();
+  if (notify) changed();
 }
 
 // ── Clues ───────────────────────────────────────────────────────────────────
 
-function runs(cells) {
-  const out = [];
-  let n = 0;
-  for (const c of [...cells, 0]) {
-    if (c) n++;
-    else if (n) {
-      out.push(n);
-      n = 0;
-    }
-  }
-  return out;
-}
-
-function clues() {
-  const rows = [];
-  const cols = [];
-  for (let y = 0; y < H; y++) rows.push(runs(pic.subarray(y * W, y * W + W)));
-  for (let x = 0; x < W; x++) cols.push(runs(Array.from({ length: H }, (_, y) => pic[y * W + x])));
-  return { rows, cols };
-}
-
-function puzzleText() {
-  const { rows, cols } = clues();
-  const line = (c) => (c.length ? c.join(" ") : "0");
-  return `rows\n${rows.map(line).join("\n")}\ncols\n${cols.map(line).join("\n")}\n`;
-}
+const clues = () => cluesOf(W, H, pic);
+const puzzleText = () => cluesText(clues());
 
 // ── Drawing ─────────────────────────────────────────────────────────────────
 
@@ -141,7 +121,7 @@ function draw() {
   const show = (c) => (c.length ? c : [0]);
   const rmax = Math.max(...rows.map((r) => show(r).length));
   const cmax = Math.max(...cols.map((c) => show(c).length));
-  const avail = Math.max(220, $("board-wrap").clientWidth - 28);
+  const avail = Math.max(220, canvas.parentElement.clientWidth - 28);
   const cell = Math.max(6, Math.min(30, Math.floor(avail / (W + rmax * 0.9))));
   const left = Math.ceil(rmax * cell * 0.9) + 4;
   const top = Math.ceil(cmax * cell * 0.9) + 4;
@@ -158,7 +138,7 @@ function draw() {
   const color = css("--t" + thread);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      if (pic[y * W + x]) tile(left + x * cell, top + y * cell, cell, color);
+      if (pic[y * W + x]) tile(ctx, left + x * cell, top + y * cell, cell, color);
       if (fixed.has(y * W + x)) {
         ctx.strokeStyle = css("--good");
         ctx.lineWidth = 2;
@@ -196,17 +176,6 @@ function draw() {
     ctx.textAlign = "center";
     cols.forEach((c, i) => [...show(c)].reverse().forEach((v, k) => ctx.fillText(v, left + (i + 0.5) * cell, top - cell * 0.5 - k * cell * 0.9)));
   }
-}
-
-// A tile: an almost full square with softly rounded corners, so that neighbouring tiles read as one picture.
-function tile(px, py, cell, color) {
-  const m = cell < 9 ? 0 : Math.max(0.5, cell * 0.035);
-  const size = cell - 2 * m;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  if (ctx.roundRect && cell >= 9) ctx.roundRect(px + m, py + m, size, size, cell * 0.12);
-  else ctx.rect(px + m, py + m, size, size);
-  ctx.fill();
 }
 
 // ── Painting ────────────────────────────────────────────────────────────────
@@ -668,7 +637,7 @@ $("import-go").onclick = () => {
 // Drop a file anywhere, or paste an image.
 let dragDepth = 0;
 window.addEventListener("dragenter", (e) => {
-  if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) {
+  if (inMaker() && e.dataTransfer && [...e.dataTransfer.types].includes("Files")) {
     dragDepth++;
     document.body.classList.add("dragging");
   }
@@ -684,11 +653,11 @@ window.addEventListener("drop", (e) => {
   e.preventDefault();
   dragDepth = 0;
   document.body.classList.remove("dragging");
-  const f = e.dataTransfer && e.dataTransfer.files[0];
+  const f = inMaker() && e.dataTransfer && e.dataTransfer.files[0];
   if (f) openImport(f);
 });
 window.addEventListener("paste", (e) => {
-  const f = e.clipboardData && [...e.clipboardData.files][0];
+  const f = inMaker() && e.clipboardData && [...e.clipboardData.files][0];
   if (f) openImport(f);
 });
 
@@ -739,21 +708,11 @@ function makeUnique() {
 }
 
 // Share and export.
-function packed() {
-  const bytes = new Uint8Array(Math.ceil((W * H) / 8));
-  for (let i = 0; i < W * H; i++) if (pic[i]) bytes[i >> 3] |= 1 << (i & 7);
-  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-function unpack(w, h, s) {
-  const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
-  const next = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) next[i] = (bin.charCodeAt(i >> 3) >> (i & 7)) & 1;
-  return next;
-}
 function hash() {
-  return `#${W}x${H}:${packed()}`;
+  return `#${W}x${H}:${packBits(W, H, pic)}`;
 }
 function save() {
+  if (!inMaker()) return; // in the game the hash belongs to the router
   history.replaceState(null, "", hash());
   try {
     localStorage.setItem("hugi-picture", hash());
@@ -766,7 +725,7 @@ function restore(h) {
   const hh = +m[2];
   if (w < 1 || hh < 1 || w > MAX || hh > MAX) return false;
   try {
-    pic = unpack(w, hh, m[3]);
+    pic = unpackBits(w, hh, m[3]);
   } catch {
     return false;
   }
@@ -784,6 +743,7 @@ async function copy(text, button, label) {
   setTimeout(() => (button.textContent = label), 1200);
 }
 $("share").onclick = () => copy(location.origin + location.pathname + hash(), $("share"), "Copy link");
+
 $("copy-clues").onclick = () => copy(puzzleText(), $("copy-clues"), "Copy clues");
 function download(name, blob) {
   const a = document.createElement("a");
@@ -802,7 +762,8 @@ function applyTheme(t) {
   try {
     localStorage.setItem("hugi-theme", t);
   } catch {}
-  draw();
+  if (inMaker()) draw();
+  document.dispatchEvent(new CustomEvent("hugi:theme", { detail: { theme: t } }));
 }
 $("theme").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
 function applyThread(n) {
@@ -811,7 +772,7 @@ function applyThread(n) {
   try {
     localStorage.setItem("hugi-thread", String(n));
   } catch {}
-  draw();
+  if (inMaker()) draw();
 }
 document.querySelectorAll("[data-thread]").forEach((b) => (b.onclick = () => applyThread(+b.dataset.thread)));
 (() => {
@@ -827,9 +788,31 @@ document.querySelectorAll("[data-thread]").forEach((b) => (b.onclick = () => app
   document.querySelectorAll("[data-thread]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.thread === n)));
 })();
 
-window.addEventListener("resize", draw);
+window.addEventListener("resize", () => inMaker() && draw());
 
 // ── Start ───────────────────────────────────────────────────────────────────
+
+let started = false; // the Maker has drawn once and asked the solver once
+
+// The Maker's view is shown (or its hash changed): follow a share link, draw, write the hash.
+function enter() {
+  if (!inMaker() || !hugi) return;
+  const h = location.hash;
+  if (/^#\d+x\d+:/.test(h) && h !== hash() && restore(h)) {
+    resetFix();
+    fromClues = false;
+    syncInputs();
+    started = true;
+    return changed();
+  }
+  if (!started) {
+    started = true;
+    return changed();
+  }
+  save();
+  draw();
+}
+document.addEventListener("hugi:route", enter);
 
 (async () => {
   let ok = restore(location.hash);
@@ -838,15 +821,13 @@ window.addEventListener("resize", draw);
       ok = restore(localStorage.getItem("hugi-picture"));
     } catch {}
   }
-  if (!ok) loadPicture(PICTURES.heart);
+  if (!ok) loadPicture(PICTURES.heart, false); // the first draw waits for the Maker's view
   syncInputs();
-  draw();
   try {
-    module = await WebAssembly.compileStreaming(fetch("hugi_web.wasm?v=dev"));
-    hugi = await instantiate(module);
+    ({ module, hugi } = await loadSolver());
   } catch (e) {
     setStatus("bad", "Could not load the solver", String(e));
     return;
   }
-  changed();
+  enter();
 })();

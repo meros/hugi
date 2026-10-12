@@ -4,7 +4,8 @@
 50×50, a daily puzzle, and a quilt of solved pictures as the collection. Hints cost skeins (the
 currency) and always show the easiest sure move for the board as it is. The WebAssembly solver
 finds that move, rates every puzzle, and proved every puzzle unique offline. Progress stays in the
-browser. The Maker stays as it is, and every old share link still opens it.
+browser. A puzzle drawn in the Maker can be sent as a link to solve (§5b). Every old share
+link still opens the Maker.
 
 Limits, up front: there is no server, no account and no sound. The mistake check does not need
 the solver: every puzzle ships with its one solution, so "wrong" is a comparison. Boards above
@@ -160,9 +161,9 @@ Every pack puzzle has exactly one solution, and the pack ships it (§3). So:
 - **"is my state still solvable"** = "are there no wrong cells". With a unique solution, these
   are the same question, exactly.
 
-Both are a loop over the cells in `web/game/hints.js`; the solver is not called. A puzzle from a `#solve:` link (§5) is checked for uniqueness by the worker before
-play starts, so the rule holds there too. A picture with several solutions does not open in Play:
-the page says "This picture has more than one solution" and links to it in the Maker.
+Both are a loop over the cells in `web/game/hints.js`; the solver is not called. A puzzle from a
+`#solve:` link is checked for uniqueness by the worker before play starts; §5b defines what
+happens when it has several solutions.
 
 ### 2b. Hints
 
@@ -330,7 +331,7 @@ and a share link hold a picture the same way. `puzzles` is in campaign order. `i
 | a replay that improves the stars | the extra stars only |
 | the daily puzzle | 5 + min(streak, 5) |
 | an achievement | 5 |
-| a `#solve:` puzzle from the Maker | 0 (a player could make trivial ones) |
+| a `#solve:` puzzle (§5b) | 0: anyone can make a trivial one; stars and best time are kept |
 
 Prices: Nudge 1, On track? 1, Show a cell 2, Show mistakes 3, Reveal a line 5. One cheap hint per
 puzzle is always affordable; leaning on hints means playing more.
@@ -362,7 +363,7 @@ so the list of levels and the gallery are the same screen.
 | `week` | A week of thought | a daily streak of 7 |
 | `hugi` | Faster than action | solve a Tapestry puzzle within par and without help |
 | `fine` | Fine work | three stars on 25 puzzles |
-| `own` | Your own pattern | solve a puzzle from a `#solve:` link |
+| `own` | A gift | solve a puzzle someone shared with you (a `#solve:` link) |
 
 ### The save: `localStorage["hugi-game"]`
 
@@ -375,6 +376,7 @@ so the list of levels and the gallery are the same screen.
   "daily": {"last": "2026-10-12", "streak": 3, "best": 5},
   "ach": {"first": "2026-10-12"},
   "stats": {"parStars": 4, "threeStars": 2, "hints": 3, "checks": 1},
+  "shared": {},
   "settings": {}
 }
 ```
@@ -401,7 +403,7 @@ The existing keys `hugi-theme`, `hugi-thread` and `hugi-picture` stay as they ar
 | empty, `#play` | Play: the quilt |
 | `#play/<id>` | a pack puzzle |
 | `#daily` | today's daily puzzle (the hash stays `#daily`) |
-| `#solve:WxH:bits` | a picture shared from the Maker, as a puzzle |
+| `#solve:WxH:bits[&t=…&a=…]` | a picture shared from the Maker, as a puzzle to solve (§5b) |
 | `#make`, `#WxH:bits` | the Maker; every existing share link keeps working |
 
 The front door changes from the Maker to Play, because the game is the new main product and a new
@@ -410,10 +412,7 @@ visitor should meet a puzzle first. The Maker is one click away in the header.
 **Header**: `Hugi`, a `<nav>` with **Play** and **Make** (`aria-current="page"` on the active one),
 and on the right the skein count (Play views only), the theme button and the GitHub link.
 
-**Maker additions**: a **Share as puzzle** button next to **Copy link**, enabled only when the
-verdict is "Unique solution". It copies `…#solve:WxH:bits`. A `#solve:` link opens in Play
-after the worker confirms uniqueness (engine 2, 5 s cap; on timeout it plays anyway and hints may
-say "needs a guess"), and the worker's `rate` gives the tier and par.
+**Maker additions**: the **Share…** dialog of §5b.
 
 **Play screen**: the daily card (size, tier, streak, Play button, or "Solved today"), the skein
 count, **Achievements** and **Your progress** buttons, then one section per tier: heading, blurb,
@@ -448,6 +447,104 @@ dispatches. New variables, in all three theme blocks: `--hint-fill` (day
 
 **Sound**: none; a silent page is the expected default.
 
+## 5b. Sharing from the Maker to the game
+
+A player draws a puzzle in the Maker and sends a link. The recipient opens it in Play as a puzzle
+to solve: clues only, the picture hidden, with the same board, hints, checks and stars as a pack
+puzzle. It earns stars and a place on a "Shared with me" shelf. It earns no skeins.
+
+### The link
+
+| link | opens |
+|---|---|
+| `#WxH:bits` (today's format, unchanged) | the Maker, to edit |
+| `#solve:WxH:bits` | Play, to solve |
+| `#solve:WxH:bits&t=<title>&a=<author>` | the same, with a title and an author name |
+
+- `W`, `H`, `bits` are exactly today's share link (`packBits`), so `#solve:` is the edit link with
+  a prefix. The prefix is what tells "solve this" from "edit this". The page never guesses.
+- `t` and `a` are optional, `encodeURIComponent`-encoded, at most 40 characters each after
+  decoding (longer is cut), and shown only through `textContent`. base64url has no `&`, so the
+  parser splits on `&` after the bits. Unknown keys are ignored, so later fields (`&v=2`) do not
+  break old pages.
+- The picture travels in the link. A recipient who decodes the link can see the answer; that is
+  accepted, as for any puzzle you send a friend.
+- Sizes 1×1 to 100×100, as in the Maker. A board above 50×50 shows "best on a large screen".
+
+### What the Maker offers
+
+**Copy link** becomes **Share…**, which opens a small dialog:
+
+- **Link to solve** (the main button): copies `#solve:` with the title and the name. It is enabled
+  only when the verdict is "Unique solution". Otherwise it is disabled and the dialog says "This
+  picture has more than one solution. Use Make unique first, or share it to edit." and shows the
+  **Make unique** button.
+- **Title** (empty by default) and **Your name** (remembered in `localStorage["hugi-author"]`)
+  fields above it.
+- **Link to edit**: copies today's `#WxH:bits` link, as Copy link does now.
+- **Solve it yourself**: opens the solve link in this tab, to test it.
+
+### Uniqueness
+
+The Maker shares a solve link only for a unique picture. A link made by hand (or by an older page)
+can still carry a picture with several solutions, so the recipient's page checks again: the game
+worker runs engine 2 with a 5 s cap before the board opens (the board shows "Checking the puzzle…").
+
+- **Unique**: a normal puzzle. The checks of §2a compare against the picture.
+- **Several solutions**: the puzzle opens with a note in the side panel, "This puzzle has more than
+  one solution. Any picture that fits every clue counts." Then:
+  - the win is "every row and column matches its clue" (`line_status` all 2), not "equals the
+    picture";
+  - **On track?**, **Show mistakes**, **Reveal a line** and the wrong-cell-first rule are hidden,
+    because "wrong" has no meaning when two answers are right;
+  - **Nudge** and **Show a cell** stay: every `line` and `probe` move holds in every solution, so
+    they are still true. A `none` move only says "this puzzle needs a guess here"; it reveals
+    nothing;
+  - the free clue colouring of §1 is the only mistake signal.
+- **Timeout** (no answer in 5 s): treated as unique, with the note "Hugi could not finish checking
+  this puzzle." This only happens for large, hard pictures.
+
+For every puzzle, unique or not, the win test is "every line matches its clue". With one solution
+this is the same as "equals the picture" (§1), so one rule serves both.
+
+The worker's `rate` gives the tier and par (5 s cap; on timeout the tier is Tapestry and par is
+computed with 0 probes).
+
+### Storage and rewards
+
+The shared puzzle's id is `s-` plus the FNV-1a 32-bit hash, in hex, of `WxH:bits`, so the same
+picture has the same id whatever its title. It is stored in a new save field (save `v` stays 1;
+`loadSave` adds an empty `shared` when it is missing):
+
+```json
+"shared": {"s-9f3a12c4": {"w": 15, "h": 15, "bits": "…", "title": "Rabbit", "author": "Ann",
+                          "unique": true, "stars": 2, "best": 301, "first": "2026-10-12", "at": 1760270400000}}
+```
+
+- At most 100 entries; the oldest `at` goes first. The board in progress uses `progress[id]` as
+  pack puzzles do.
+- **The shelf**: the Play screen ends with a "Shared with me" section, a quilt like the tiers: one
+  patch per stored puzzle, solved or not, labelled with its title (or "Untitled") and "from Ann".
+  A patch opens its `#solve:` link again. It is not part of the 150, does not open tiers, and
+  does not count for the Quilter achievement.
+- **Rewards**: stars and best time, as for a pack puzzle. **0 skeins**, because anyone can make a
+  trivial puzzle in seconds. Hints cost skeins as usual. The achievement `own` (renamed "A gift":
+  solve a puzzle someone shared with you) pays its 5 skeins once.
+
+### Code
+
+`web/game/shared.js` (WP9):
+
+```js
+export function solveLink({w, h, cells, title, author}): string  // "#solve:WxH:bits&t=…&a=…"
+export function parseSolveLink(hash): {w, h, bits, cells, title, author} | null  // null for anything else
+export function sharedId(w, h, bits): string                     // "s-" + FNV-1a hex
+export function sharedPuzzle(link, {unique, rating}): Puzzle     // kind "shared"; name = title or "Untitled"
+```
+
+This replaces `sharedPuzzle` in `pack.js`. The router sends `#solve:` to the puzzle screen with
+the parsed link; `play.js` asks `engine.unique` and `engine.rate`, then loads the board.
+
 ## 6. Code architecture
 
 ### Files
@@ -455,13 +552,14 @@ dispatches. New variables, in all three theme blocks: `--hint-fill` (day
 | WP | files and their role |
 |---|---|
 | WP1 | `src/game.rs` (`next_move`, `rate`, `tier`, `line_status`, tests); `src/lib.rs` (`pub mod game;`); `src/main.rs` (`hugi rate <file or ->`); `web/src/lib.rs` (exports `hint`, `line_status`, `rate`); `web/hugi.js` (wrappers); `web/test/wasm.test.mjs` |
-| WP2 | `web/grid.js` (clue and packing helpers, moved from `app.js`); `web/draw.js` (`css`, `tile`, `dot`); `web/wasm.js` (one compile for Maker and game); `web/index.html` (nav, view containers, stylesheet links, `--hint-fill`, `#board-wrap` styles become `.board-wrap`); `web/app.js` (imports, view guards, Share as puzzle); `web/game/main.js` (router, boot, screens); `web/game/game.css` (nav, shared components, dialogs, toasts); both workflows |
+| WP2 | `web/grid.js` (clue and packing helpers, moved from `app.js`); `web/draw.js` (`css`, `tile`, `dot`); `web/wasm.js` (one compile for Maker and game); `web/index.html` (nav, view containers, stylesheet links, `--hint-fill`, `#board-wrap` styles become `.board-wrap`); `web/app.js` (imports, view guards); `web/game/main.js` (router, boot, screens); `web/game/game.css` (nav, shared components, dialogs, toasts); both workflows |
 | WP3 | `scripts/make_pack.py`, `scripts/pack/icons.tsv`, `scripts/pack/small.txt`, `web/pack.json` |
 | WP4 | `web/game/rules.js`, `save.js`, `pack.js`: pure logic |
 | WP5 | `web/game/board.js`: the play canvas |
 | WP6 | `web/game/worker.js`, `engine.js`, `hints.js`: solver calls and the hint policy |
 | WP7a | `web/game/quilt.js`, `quilt.css`, `dialogs.js`: Play screen, achievements, progress dialog |
 | WP7b | `web/game/play.js`, `play.css`: puzzle screen, timer, win |
+| WP9 | `web/game/shared.js`: solve links, ids; then the Share… dialog, the shelf and the several-solutions mode in the files above (§5b) |
 
 `app.js` keeps the Maker and nothing else. The game never imports `app.js`. They meet in the
 DOM (`body.dataset.view`, the `hugi:route` and `hugi:theme` events) and in the shared modules.
@@ -499,7 +597,6 @@ export async function loadPack(): Promise<Pack>   // fetch("pack.json?v=dev"); P
 export function dailyFor(pack, date = new Date()): {puzzle, day /* "YYYY-MM-DD" */}
 export function tierState(pack, save, tierId): {open: boolean, solved: number, need: number}
 export function nextPuzzle(pack, save, afterId): Puzzle | null   // next unsolved in an open tier
-export function sharedPuzzle(hash): Puzzle | null                // from "#solve:WxH:bits"
 
 // web/game/rules.js (pure)
 export const PRICES = {nudge: 1, cell: 2, line: 5, track: 1, mistakes: 3}
@@ -634,7 +731,8 @@ night):
 8. Tier unlock at 20 solved; locked patches cannot take focus.
 9. The daily card on two dates (change the clock): the streak counts, and resets after a gap.
 10. Download, Start over, Load save: everything comes back.
-11. Maker **Share as puzzle**: the link opens in Play; a non-unique picture is refused.
+11. Maker **Share…**: the solve link opens in Play with clues only; the edit link opens the Maker;
+    a non-unique picture cannot get a solve link.
 12. A 50×50 puzzle on the phone: Move scrolls, Fill draws.
 13. A screen reader (Orca or VoiceOver) reads the cursor cell and the hint messages.
 14. Storage blocked: the game plays and says that it cannot save.
@@ -654,10 +752,13 @@ The shared contract is §2 (the wasm API and JSON) and §3 (the pack format), pl
 | WP6 Engine and hints | `web/game/worker.js`, `engine.js`, `hints.js`, `web/test/hints.test.mjs` | WP1 | 2 h |
 | WP7a Quilt and dialogs | `web/game/quilt.js`, `quilt.css`, `dialogs.js` | WP2, WP4 | 3 h |
 | WP7b Puzzle screen | `web/game/play.js`, `play.css` | WP2, WP4, WP5, WP6 | 4 h |
+| WP9 Share to solve | `web/game/shared.js`, `web/test/shared.test.mjs`; the Share… dialog in `index.html` and `app.js`; the shelf in `quilt.js`; the several-solutions mode in `play.js` and `hints.js` | WP2, WP4, WP6; the shelf after WP7a, the play mode after WP7b | 3 h |
 | WP8 Finish | README "Play" section, `docs/img/game.png`, the browser checklist of §7, fixes | all | 2 h |
 
-Lanes: **A** WP1 ∥ WP2 ∥ WP3 (curation). **B** WP3 (rating) ∥ WP4 ∥ WP5 ∥ WP6. **C** WP7a ∥ WP7b.
-**D** WP8. Critical path WP2 → WP5 → WP7b → WP8: about 11.5 h.
+Lanes: **A** WP1 ∥ WP2 ∥ WP3 (curation). **B** WP3 (rating) ∥ WP4 ∥ WP5 ∥ WP6 ∥ WP9 (`shared.js`,
+the Maker dialog). **C** WP7a ∥ WP7b, then WP9 (shelf, play mode). **D** WP8. Critical path WP2 →
+WP5 → WP7b → WP9 → WP8: about 13 h. WP9 edits files that WP2, WP7a and WP7b own, so it starts each
+part after that owner has merged.
 
 **Acceptance criteria** (each one is a command or an observable check):
 
@@ -688,6 +789,13 @@ Lanes: **A** WP1 ∥ WP2 ∥ WP3 (curation). **B** WP3 (rating) ∥ WP4 ∥ WP5 
 - **WP7a**: in a browser with a fixture save: tiers, locks, patches in all three states, the daily
   card, achievements dialog, download and load of the save.
 - **WP7b**: in a browser: checks 3 to 8 of §7 on one Tabby and one Satin puzzle.
+- **WP9**: `node --test web/test/shared.test.mjs` passes: `parseSolveLink(solveLink(x))` round-trips
+  title and author with `&`, `#`, `å` and emoji; a 41-character title is cut to 40; `#15x15:…`,
+  `#make` and garbage give `null`; `sharedId` is the same with and without a title. In a browser:
+  the Share… dialog on a unique and a non-unique picture; a solve link opens with clues only and
+  the title and author shown; a hand-made link to the Maker's Rings example (several solutions)
+  opens with the note, wins on any clue-satisfying picture, and hides the checks; a solved shared
+  puzzle is on the shelf with its stars and earned 0 skeins (5 once, for "A gift").
 - **WP8**: the whole checklist of §7 done and noted in the PR; the README shows the game.
 
 ## Risks

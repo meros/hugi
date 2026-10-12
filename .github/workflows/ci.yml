@@ -18,6 +18,11 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo build -p hugi-web --release --target wasm32-unknown-unknown
       - run: cargo test --release
+      - run: web/build.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test web/test/*.test.mjs
       - name: Solve the example puzzle
         run: cargo run --release -- puzzles/heart.txt
       - name: Check the Python tools compile

@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hugi nonogram maker</title>
-<meta name="description" content="Draw a nonogram and the clues appear. The solver, Hugi, compiled to WebAssembly, tells you at once whether the puzzle has exactly one solution.">
+<title>Hugi nonograms</title>
+<meta name="description" content="Play nonogram puzzles, or draw your own and the clues appear. The solver, Hugi, compiled to WebAssembly, tells you at once whether the puzzle has exactly one solution.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23efe3c8'/%3E%3Cpath d='M3 3l10 10M13 3L3 13' stroke='%232e4a73' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="game/game.css?v=dev">
 <style>
   /* Day: parchment, linen and natural dyes (woad, madder, weld, moss). Night: the hall after dark. */
   :root {
     --bg: #e6dabd; --panel: #f6efdc; --ink: #2a2118; --muted: #6e604c;
     --line: #d2c5a4; --heavy: #7a6848; --glow: rgba(255, 255, 255, .28); --stitch: #2e4a73; --madder: #a63d2a;
-    --madder-fill: rgba(166, 61, 42, .22);
+    --madder-fill: rgba(166, 61, 42, .22); --hint-fill: rgba(46, 74, 115, .14);
     --good: #3f6b3a; --warn: #a96a10; --bad: #9c2b23; --shadow: rgba(60, 40, 10, .18);
     --t1: #2e4a73; --t2: #a63d2a; --t3: #c48a12; --t4: #4f6b34; --t5: #2a2118;
     --serif: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", P052, Georgia, serif;
@@ -19,7 +20,7 @@
   :root[data-theme="dark"] {
     --bg: #0f141b; --panel: #19202a; --ink: #ece3cf; --muted: #98a0a8;
     --line: #2a3441; --heavy: #6d7b8c; --stitch: #7aa2e0; --madder: #e0765f; --glow: rgba(110, 130, 165, .12);
-    --madder-fill: rgba(224, 118, 95, .28);
+    --madder-fill: rgba(224, 118, 95, .28); --hint-fill: rgba(122, 162, 224, .18);
     --good: #8cc07a; --warn: #e6b04a; --bad: #f2877f; --shadow: rgba(0, 0, 0, .5);
     --t1: #7aa2e0; --t2: #e0765f; --t3: #e8b94a; --t4: #8cb36a; --t5: #e9dfc8;
   }
@@ -27,7 +28,7 @@
     :root:not([data-theme="light"]) {
       --bg: #0f141b; --panel: #19202a; --ink: #ece3cf; --muted: #98a0a8;
       --line: #2a3441; --heavy: #6d7b8c; --stitch: #7aa2e0; --madder: #e0765f; --glow: rgba(110, 130, 165, .12);
-      --madder-fill: rgba(224, 118, 95, .28);
+      --madder-fill: rgba(224, 118, 95, .28); --hint-fill: rgba(122, 162, 224, .18);
       --good: #8cc07a; --warn: #e6b04a; --bad: #f2877f; --shadow: rgba(0, 0, 0, .5);
       --t1: #7aa2e0; --t2: #e0765f; --t3: #e8b94a; --t4: #8cb36a; --t5: #e9dfc8;
     }
@@ -36,6 +37,8 @@
   html { background: var(--bg); }
   body { margin: 0; min-height: 100vh; color: var(--ink); font: 15px/1.5 var(--serif);
          background-image: radial-gradient(ellipse at 20% 0%, var(--glow), transparent 60%); }
+  .view { display: none; }
+  body[data-view="make"] #view-make, body[data-view="play"] #view-play, body[data-view="puzzle"] #view-puzzle { display: block; }
   header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; padding: 1rem 1.2rem .5rem; }
   header h1 { font-size: 1.6rem; margin: 0; font-weight: 700; letter-spacing: .01em; }
   header .links { margin-left: auto; font-size: .9rem; display: flex; gap: .9rem; align-items: center; }
@@ -53,7 +56,7 @@
   .threads button[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
   main { display: grid; grid-template-columns: minmax(0, 1fr) 21.5rem; gap: 1.2rem; padding: 0 1.2rem 1.5rem; }
   @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
-  #board-wrap { border: 3px double var(--heavy); border-radius: 10px; padding: .9rem; overflow: auto;
+  .board-wrap { border: 3px double var(--heavy); border-radius: 10px; padding: .9rem; overflow: auto;
                 display: flex; justify-content: center; align-items: flex-start; background-color: var(--panel);
                 box-shadow: 0 6px 18px var(--shadow);
                 background-image: repeating-linear-gradient(0deg, rgba(120, 100, 60, .07) 0 1px, transparent 1px 3px),
@@ -86,11 +89,17 @@
 <body>
 <header>
   <h1>Hugi</h1>
+  <nav aria-label="Modes">
+    <a id="nav-play" href="#play">Play</a>
+    <a id="nav-make" href="#make">Make</a>
+  </nav>
   <span class="links">
+    <span id="skeins" class="skeins"></span>
     <button id="theme" aria-label="Switch between day and night">Night</button>
     <a href="https://github.com/meros/hugi">the solver, on GitHub</a>
   </span>
 </header>
+<div id="view-make" class="view">
 <div class="bar">
   <label>width <input id="w" type="number" min="1" max="100" value="15"></label>
   <label>height <input id="h" type="number" min="1" max="100" value="15"></label>
@@ -115,7 +124,7 @@
   </span>
 </div>
 <main>
-  <div id="board-wrap"><canvas id="board" tabindex="0" aria-label="The puzzle: click and drag to draw"></canvas></div>
+  <div class="board-wrap"><canvas id="board" tabindex="0" aria-label="The puzzle: click and drag to draw"></canvas></div>
   <aside aria-live="polite">
     <div id="verdict" class="verdict idle">Loading the solver…</div>
     <div id="detail"></div>
@@ -124,6 +133,10 @@
       "No guessing needed" means row and column logic alone solves it.</p>
   </aside>
 </main>
+</div>
+<div id="view-play" class="view"></div>
+<div id="view-puzzle" class="view"></div>
+<div id="toasts" class="toasts" role="status"></div>
 <dialog id="import-dialog">
   <form method="dialog" onsubmit="return false">
     <p><strong>Import a puzzle.</strong> Drop a file anywhere on the page, choose one, or paste text.</p>
@@ -151,5 +164,6 @@
   </form>
 </dialog>
 <script type="module" src="app.js?v=dev"></script>
+<script type="module" src="game/main.js?v=dev"></script>
 </body>
 </html>
