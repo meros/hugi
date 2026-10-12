@@ -10,10 +10,15 @@ Knotty in 20 seconds and Faase in two minutes. On the nine hard puzzles of that 
 first on seven and about 3 times faster than the better of kissat and CaDiCaL on average. It
 checks uniqueness: it reports one solution, or that there are at least two.
 
-**[Try it in your browser](https://meros.github.io/hugi/):** draw a puzzle, and Hugi's solver,
-compiled to WebAssembly, tells you at once whether it has exactly one solution.
+**[Play it in your browser](https://meros.github.io/hugi/):** 150 picture puzzles in five tiers,
+from 5×5 to 50×50, and a new one every day. Every picture is proved unique by Hugi's solver, and the
+same solver, compiled to WebAssembly, gives the hints. It also works as a maker: draw a puzzle and
+the solver tells you at once whether it has exactly one solution, then send it to a friend as a
+link to solve.
 
-[![The Hugi web page: a heart drawn on the grid, its clues, and the verdict "Unique solution"](docs/img/maker.png)](https://meros.github.io/hugi/)
+[![The Hugi game: a quilt of solved pictures, the daily puzzle, and the tiers from Tabby to Tapestry](docs/img/game.png)](https://meros.github.io/hugi/)
+
+[![The Maker: a heart drawn on the grid, its clues, and the verdict "Unique solution"](docs/img/maker.png)](https://meros.github.io/hugi/#make)
 
 ## What is a nonogram?
 
@@ -144,6 +149,18 @@ one clue per row, a `cols` line, one clue per column. Lines are up to 127 cells,
 
 For the fastest binary, build with profile-guided optimisation (it needs `llvm-profdata` of the
 same LLVM version as `rustc`): `scripts/build-pgo.sh` writes `target-pgo/release/hugi`.
+
+**The game** (the page opens in it). Each solved picture joins a quilt, one patch per puzzle, and
+a finished tier is a finished quilt. Hints cost skeins (the currency): *Nudge* points at the easiest
+sure move for the board as it is, *Show a cell* sets it, *Reveal a line* fills a row or column,
+*On track?* and *Show mistakes* check your work. A done line greys its clue and an impossible one
+turns red, for free. Stars reward solving, solving without help, and solving within par time. The
+solver also rates every puzzle offline (how many line-logic moves, how many guesses it needs) and
+that rating sorts the tiers: Tabby, Twill, Satin, Brocade and Tapestry. Everything is stored in your
+browser (no account, no server) and can be exported as a file. The pictures of 10×10 and larger are
+Material Icons (Apache 2.0), the 5×5 ones are drawn for Hugi: `scripts/make_pack.py` builds
+`web/pack.json`, the design is in [docs/game-design.md](docs/game-design.md). The page works on a
+phone first, and `web/e2e/` holds the Playwright tests (four screen sizes): `web/e2e/nix-test.sh`.
 
 **The web page** (`web/`, live at https://meros.github.io/hugi/) runs the solver in your browser
 as WebAssembly: three engines race in Web Workers, and the first answer wins. Draw a picture and
